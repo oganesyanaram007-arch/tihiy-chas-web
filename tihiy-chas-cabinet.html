@@ -154,6 +154,41 @@ input[type=file]{display:none}
 .toast.show{opacity:1;transform:translateX(-50%)}
 .toast.err{background:var(--err)}
 
+/* ---- профиль ---- */
+.prof-skel,.prof-fail{max-width:680px;color:var(--ink-soft);font-family:var(--disp);
+  font-style:italic;font-size:16px;padding:34px 0}
+.prof-fail{color:var(--err);font-style:normal;font-family:var(--sans);font-size:14px}
+.prof-fail button{margin-top:14px;display:block;padding:10px 18px;border-radius:11px;
+  background:var(--espresso);color:#FBF7EF;font-size:13.5px;font-weight:600}
+
+.prof-hero{display:flex;align-items:center;gap:13px;max-width:680px;margin:0 0 14px;
+  background:var(--espresso);color:#FBF7EF;border-radius:16px;padding:18px 20px}
+.prof-av{width:46px;height:46px;border-radius:14px;background:var(--honey);color:var(--espresso);
+  display:grid;place-items:center;font-weight:700;font-size:19px;flex:none}
+.prof-id{min-width:0}
+.prof-id b{font-family:var(--disp);font-size:18px;display:block;line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prof-id span{font-size:12.5px;color:var(--cream-dim);display:block;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prof-role{margin-left:auto;flex:none;font-family:var(--mono);font-size:9.5px;font-weight:700;
+  padding:5px 9px;border-radius:999px;background:rgba(223,166,60,.16);color:var(--honey);white-space:nowrap}
+
+.prof-card{max-width:680px;margin:0 0 14px;background:#fff;border:1px solid var(--line-lt);
+  border-radius:16px;padding:20px 22px}
+.prof-card .fld{margin:0 0 15px}
+.prof-card .fld input:focus{outline:none;border-color:var(--honey)}
+.prof-card .fld input[readonly]{background:#F2ECE1;color:var(--ink-soft)}
+.prof-hint{font-size:12px;color:var(--ink-soft);line-height:1.5;margin-top:7px}
+.prof-err{display:none;color:var(--err);font-size:12.5px;margin:-4px 0 12px}
+.prof-err.show{display:block}
+.prof-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:4px}
+.prof-save{background:var(--espresso);color:#FBF7EF;border-radius:11px;padding:12px 24px;
+  font-size:14px;font-weight:700}
+.prof-save:disabled{opacity:.45}
+.prof-msg{font-size:13px}
+.prof-msg.ok{color:var(--ok)}
+.prof-msg.err{color:var(--err)}
+
 .tabbar{position:absolute;left:0;right:0;bottom:0;height:76px;background:var(--espresso);border-top:1px solid var(--line-dk);display:flex;padding:8px 6px 20px;border-radius:0 0 44px 44px}
 @media(max-width:430px){.tabbar{border-radius:0}}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--mono);font-size:9px;font-weight:700;color:var(--cream-dim)}
@@ -242,6 +277,54 @@ input[type=file]{display:none}
           <button class="bk-tab" data-f="past">Прошедшие</button>
         </div>
         <div id="bkList"></div>
+      </section>
+
+      <!-- ===== ПРОФИЛЬ ВЛАДЕЛЬЦА ===== -->
+      <section class="screen" id="scr-profile">
+        <div class="wizard-head">
+          <div class="wz-title">Профиль</div>
+          <div class="wz-sub">Контакты владельца — по ним с вами связывается модератор</div>
+        </div>
+
+        <div class="prof-skel" id="profSkel">Загружаем профиль…</div>
+
+        <div class="prof-fail" id="profFail" style="display:none">
+          <span id="profFailMsg">Не удалось загрузить профиль</span>
+          <button id="profRetry">Попробовать снова</button>
+        </div>
+
+        <div id="profBody" style="display:none">
+          <div class="prof-hero">
+            <div class="prof-av" id="pfAvatar">?</div>
+            <div class="prof-id">
+              <b id="pfHeroName">Владелец</b>
+              <span id="pfHeroOrg">Заведение</span>
+            </div>
+            <span class="prof-role">Партнёр</span>
+          </div>
+
+          <div class="prof-card">
+            <div class="fld">
+              <label>Имя</label>
+              <input id="pfName" maxlength="120" autocomplete="name" placeholder="Как к вам обращаться">
+            </div>
+            <div class="fld">
+              <label>Телефон</label>
+              <input id="pfPhone" type="tel" maxlength="32" autocomplete="tel" placeholder="+7 900 000-00-00">
+              <div class="prof-hint">Модератор звонит по нему, когда проверяет заявку.</div>
+            </div>
+            <div class="fld">
+              <label>E-mail</label>
+              <input id="pfEmail" type="email" readonly>
+              <div class="prof-hint" id="pfEmailHint">&nbsp;</div>
+            </div>
+            <div class="prof-err" id="pfErr"></div>
+            <div class="prof-actions">
+              <button class="prof-save" id="pfSave" disabled>Сохранить</button>
+              <span class="prof-msg" id="pfMsg"></span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- ===== ШАГ 1: КАРТОЧКА ===== -->
@@ -406,7 +489,9 @@ const WDS=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 const STATUS_LABEL={draft:"Черновик",moderation:"На модерации",active:"Опубликовано"};
 
 /* ---------- демо-хранилище (используется, если API_URL пуст) ---------- */
-const DEMO = { venues: [], nextId: 1 };
+const DEMO = { venues: [], nextId: 1,
+  me: {user:{name:"Владелец",phone:"+7 900 000-00-00",email:"owner@example.com"},
+       partner:{title:"Заведение"}} };
 
 async function api(path, opts={}){
   if(DEMO_MODE) return demoApi(path, opts);
@@ -429,6 +514,13 @@ function demoApi(path, opts){
   const method=(opts.method||"GET").toUpperCase();
   const body = opts.body ? JSON.parse(opts.body) : {};
   return new Promise(res=>setTimeout(()=>{
+    if((path==="/api/cab/me"||path==="/api/auth/me") && method==="GET"){
+      return res(JSON.parse(JSON.stringify(DEMO.me)));
+    }
+    if(path==="/api/auth/profile" && method==="PATCH"){
+      Object.assign(DEMO.me.user,{name:body.name,phone:body.phone});
+      return res({ok:true});
+    }
     if(path==="/api/cab/venues" && method==="POST"){
       const id=DEMO.nextId++;
       DEMO.venues.push({id, ...body, photos:[], quiet_windows:[], status:"draft"});
@@ -496,9 +588,8 @@ async function boot(){
     $("listGreeting").textContent = `Здравствуйте, ${ME.name}!`;
     try{
       const m=await api("/api/cab/me");
-      $("csName").textContent=m.user.name||"Владелец";
-      $("csOrg").textContent=m.partner.title||"Заведение";
-      $("csAvatar").textContent=(m.user.name||"В").trim()[0].toUpperCase();
+      PROF={user:m.user||{}, partner:m.partner||{}};   // экран профиля откроется без пустой паузы
+      applyMe(PROF);
     }catch(e){}
     go("list");
     refreshBookings().catch(()=>{});
@@ -516,7 +607,7 @@ async function boot(){
 }
 
 /* ---------- роутер ---------- */
-const SCR={gate:"scr-gate",list:"scr-list",bookings:"scr-bookings",step1:"scr-step1",step2:"scr-step2",
+const SCR={gate:"scr-gate",list:"scr-list",bookings:"scr-bookings",profile:"scr-profile",step1:"scr-step1",step2:"scr-step2",
           step3:"scr-step3",step4:"scr-step4",status:"scr-status"};
 let screen="gate";
 function go(s){
@@ -524,9 +615,11 @@ function go(s){
   Object.values(SCR).forEach(id=>$(id).classList.remove("on"));
   $(SCR[s]).classList.add("on");
   $("app").scrollTop=0;
-  $("tgLeft").textContent = (s==="list"||s==="bookings") ? "Закрыть" : "‹ Назад";
+  const root = s==="list"||s==="bookings"||s==="profile";
+  $("tgLeft").textContent = root ? "Закрыть" : "‹ Назад";
   $("wzActions").style.display = ["step1","step2","step3","step4"].includes(s) ? "flex" : "none";
-  $("tabbar").style.display = (s==="list"||s==="bookings") ? "flex" : "none";
+  $("tabbar").style.display = root ? "flex" : "none";
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("sel",root&&t.dataset.t===s));
   /* SIDEBAR_SYNC */
   const w=["step1","step2","step3","step4","status"].includes(s);
   $("tgLeft").style.display = w ? "block" : "none";
@@ -543,9 +636,9 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{hap();
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("sel"));t.classList.add("sel");
   if(t.dataset.t==="list") go("list");
   else if(t.dataset.t==="bookings"){ go("bookings"); refreshBookings(); }
-  else toast("Профиль владельца — скоро");});
+  else openProfile();});
 
-document.querySelector(".cs-who").onclick=()=>{hap();toast("Профиль владельца — скоро");};
+document.querySelector(".cs-who").onclick=()=>{hap();csToggle(false);openProfile();};
 $("csBurger").onclick=()=>{csToggle();};
 
 $("cabMenu").addEventListener("click",e=>{
@@ -555,8 +648,117 @@ $("cabMenu").addEventListener("click",e=>{
   const t=x.dataset.t;
   if(t==="list") go("list");
   else if(t==="bookings"){ go("bookings"); refreshBookings(); }
-  else toast("Профиль владельца — скоро");
+  else openProfile();
 });
+
+/* ---------- профиль владельца ---------- */
+/* Читаем из двух мест: /api/cab/me знает про заведение, /api/auth/me — про
+   почту и телефон учётной записи. Пишем через /api/auth/profile — тот же
+   эндпоинт, которым сохраняет профиль гостевой кабинет. */
+let PROF=null, profLoaded=false, profSnap="", profBusy=false;
+
+/* «Мягкий» запрос: 401 здесь не повод выкидывать из кабинета — в Telegram
+   вход живёт по X-Init-Data, и /api/auth/* может о нём не знать. */
+async function apiSoft(path){
+  if(DEMO_MODE) return demoApi(path,{}).catch(()=>null);
+  try{
+    const r=await fetch(API_URL+path,{credentials:"same-origin",
+      headers:{"Content-Type":"application/json","X-Init-Data":(tg&&tg.initData)||""}});
+    return r.ok ? await r.json().catch(()=>null) : null;
+  }catch(e){ return null; }
+}
+
+/* Имя и организация показываются сразу в трёх местах — держим их в одной руке,
+   чтобы после сохранения не остались старые подписи в меню. */
+function applyMe(m){
+  const name=((m&&m.user&&m.user.name)||"Владелец").trim()||"Владелец";
+  $("csName").textContent=name;
+  $("csOrg").textContent=(m&&m.partner&&m.partner.title)||"Заведение";
+  $("csAvatar").textContent=(name[0]||"В").toUpperCase();
+  $("listGreeting").textContent=`Здравствуйте, ${name}!`;
+}
+
+function profView(v){
+  $("profSkel").style.display = v==="load" ? "block":"none";
+  $("profFail").style.display = v==="fail" ? "block":"none";
+  $("profBody").style.display = v==="body" ? "block":"none";
+}
+function pfSnapshot(){ return $("pfName").value.trim()+"\u0000"+$("pfPhone").value.trim(); }
+function pfDirty(){ $("pfSave").disabled = !profLoaded || profBusy || pfSnapshot()===profSnap; }
+
+function profFill(){
+  const u=(PROF&&PROF.user)||{}, pt=(PROF&&PROF.partner)||{};
+  const name=(u.name||"").trim();
+  $("pfName").value=name;
+  $("pfPhone").value=u.phone||"";
+  $("pfEmail").value=u.email||"";
+  $("pfEmailHint").textContent = u.email
+    ? "Логин в кабинете. Сменить адрес можно через поддержку."
+    : (profLoaded ? "Почта не привязана — вход через Telegram." : " ");
+  $("pfHeroName").textContent=name||"Владелец";
+  $("pfHeroOrg").textContent=pt.title||"Заведение";
+  $("pfAvatar").textContent=((name||"В")[0]||"В").toUpperCase();
+  profSnap=pfSnapshot();
+  pfDirty();
+  profView("body");
+}
+
+async function loadProfile(){
+  $("pfMsg").textContent=""; $("pfMsg").className="prof-msg";
+  $("pfErr").classList.remove("show");
+  if(PROF) profFill();          // рисуем то, что уже знаем с загрузки кабинета
+  else profView("load");
+  try{
+    const [cab,auth]=await Promise.all([api("/api/cab/me"), apiSoft("/api/auth/me")]);
+    const user={...((auth&&auth.user)||{})};
+    Object.entries((cab&&cab.user)||{}).forEach(([k,v])=>{ if(v!==null&&v!==undefined&&v!=="") user[k]=v; });
+    PROF={user, partner:(cab&&cab.partner)||{}};
+    profLoaded=true;
+    applyMe(PROF);
+    profFill();
+  }catch(e){
+    if(PROF) return;            // старые данные на экране лучше пустого экрана
+    $("profFailMsg").textContent=e.message||"Не удалось загрузить профиль";
+    profView("fail");
+  }
+}
+
+function openProfile(){ go("profile"); loadProfile(); }   /* hap() уже сделал вызвавший */
+$("profRetry").onclick=()=>{hap();loadProfile();};
+["pfName","pfPhone"].forEach(id=>$(id).addEventListener("input",()=>{
+  $("pfErr").classList.remove("show");
+  $("pfMsg").textContent=""; $("pfMsg").className="prof-msg";
+  pfDirty();
+}));
+
+$("pfSave").onclick=async()=>{
+  if(profBusy) return;
+  hap();
+  const name=$("pfName").value.trim(), phone=$("pfPhone").value.trim();
+  const msg=$("pfMsg"); msg.textContent=""; msg.className="prof-msg";
+  $("pfErr").classList.remove("show");
+  if(name.length<2 || (phone && phone.length<5)){
+    $("pfErr").textContent = name.length<2
+      ? "Укажите имя — минимум два символа"
+      : "Телефон слишком короткий";
+    $("pfErr").classList.add("show");
+    return;
+  }
+  profBusy=true; $("pfSave").disabled=true; $("pfSave").textContent="Сохраняем…";
+  try{
+    await api("/api/auth/profile",{method:"PATCH",body:JSON.stringify({name,phone})});
+    PROF={...PROF, user:{...((PROF&&PROF.user)||{}), name, phone}};
+    applyMe(PROF);
+    profBusy=false;
+    profFill();
+    msg.textContent="Сохранено"; msg.className="prof-msg ok";
+    toast("Профиль сохранён");
+  }catch(err){
+    profBusy=false;
+    msg.textContent=err.message; msg.className="prof-msg err";
+    pfDirty();
+  }finally{ $("pfSave").textContent="Сохранить"; }
+};
 
 /* ---------- брони ---------- */
 let BK=[], bkFilter="up";
