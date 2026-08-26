@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Личный кабинет — Тихий Час</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{
+    --espresso:#191410;--paper:#fdfaf5;--honey:#DFA63C;--honey-d:#B9822A;
+    --ink:#20180F;--ink-soft:#6E6456;--line:#E7DECB;--muted:#8a7d6c;--ok:#2E9E6B;--err:#C2542F;
+    --disp:'New York','Iowan Old Style',Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,'Segoe UI','Roboto',sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--sans);background:var(--paper);color:var(--ink)}
+  header{position:sticky;top:0;z-index:20;background:var(--espresso);color:#fff;
+         padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+  header .logo{font-family:var(--disp);font-weight:700;font-size:19px;color:#fff;text-decoration:none}
+  header .logo span{color:var(--honey)}
+  header nav{display:flex;gap:16px;align-items:center;font-size:13.5px}
+  header a.nl{color:#DBD2C1;text-decoration:none;cursor:pointer}
+  .wrap{max-width:760px;margin:0 auto;padding:22px 16px 70px}
+
+  .hero{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin-bottom:18px;
+        display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .hero h1{margin:0 0 4px;font-family:var(--disp);font-size:22px}
+  .hero .sub{font-size:13px;color:var(--muted)}
+  .pts{text-align:right}
+  .pts b{display:block;font-size:28px;font-family:var(--disp);color:var(--honey-d);line-height:1}
+  .pts span{font-size:12px;color:var(--muted)}
+
+  .tabs{display:flex;gap:8px;margin-bottom:18px;background:#efe7d8;border-radius:12px;padding:4px}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:9px;font-size:14px;font-weight:600;
+       cursor:pointer;color:var(--muted);user-select:none}
+  .tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+  .bk{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px 18px;margin-bottom:11px}
+  .bk-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .bk-top b{font-size:16px;font-family:var(--disp)}
+  .bk-meta{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .bk-code{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#f7f1e6;
+           padding:4px 9px;border-radius:7px;display:inline-block;margin-top:9px;letter-spacing:.5px}
+  .st{font-size:11.5px;padding:4px 10px;border-radius:8px;font-weight:700;flex:none}
+  .st.active{background:#e8f5ee;color:var(--ok)}
+  .st.cancelled{background:#f7e9e3;color:var(--err)}
+  .st.visited{background:#efe9f7;color:#6a4fa0}
+  .bk-act{margin-top:12px;display:flex;gap:8px}
+  .btn-x{border:1.5px solid var(--err);color:var(--err);background:#fff;border-radius:9px;
+         padding:8px 14px;font-size:12.5px;cursor:pointer}
+  .btn-h{background:var(--honey);color:#fff;border:none;border-radius:10px;padding:11px 18px;
+         font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+  .empty{text-align:center;padding:44px 20px;color:var(--muted);font-family:var(--disp);font-style:italic}
+
+  .field{margin-bottom:14px}
+  label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+  input{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-size:14.5px;background:#fff}
+  input:focus{outline:none;border-color:var(--honey)}
+  input[readonly]{background:#f7f3ec;color:var(--muted)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
+  .msg{font-size:13px;margin-top:10px;min-height:1px}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+         background:var(--espresso);color:#fff;padding:12px 20px;border-radius:12px;font-size:13.5px;
+         opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:var(--err)}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="/">Тихий <span>Час</span></a>
+  <nav><a class="nl" href="/">Все заведения</a><a class="nl" id="logoutBtn">Выйти</a></nav>
+</header>
+
+<div class="wrap">
+  <div id="loading" class="empty">Загружаем кабинет…</div>
+
+  <div id="app" style="display:none">
+    <div class="hero">
+      <div>
+        <h1 id="greet">Личный кабинет</h1>
+        <div class="sub" id="visitsLine"></div>
+      </div>
+      <div class="pts"><b id="pts">0</b><span>баллов</span></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab on" data-t="up">Активные</div>
+      <div class="tab" data-t="past">История</div>
+      <div class="tab" data-t="prof">Профиль</div>
+    </div>
+
+    <div id="scrUp"></div>
+    <div id="scrPast" style="display:none"></div>
+
+    <div id="scrProf" style="display:none">
+      <div class="card">
+        <div class="field"><label>E-mail</label><input id="pEmail" readonly></div>
+        <div class="field"><label>Имя</label><input id="pName" maxlength="120"></div>
+        <div class="field"><label>Телефон — по нему заведение свяжется с вами</label>
+          <input id="pPhone" type="tel" maxlength="32" placeholder="+7 900 000-00-00"></div>
+        <button class="btn-h" id="saveProf">Сохранить</button>
+        <div class="msg" id="profMsg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+const CAT_LABEL={food:"Ресторан / кафе",coffee:"Кофейня",beauty:"Красота",spa:"СПА",fun:"Досуг",auto:"Авто"};
+const ST={active:"Активна",cancelled:"Отменена",visited:"Визит подтверждён"};
+let DATA=null;
+
+async function api(path,opts={}){
+  const r=await fetch(path,{...opts,credentials:"same-origin",
+    headers:{"Content-Type":"application/json",...(opts.headers||{})}});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw Object.assign(new Error(d.detail||"Ошибка сервера"),{status:r.status});
+  return d;
+}
+function toast(m,e){const t=$("toast");t.textContent=m;t.className="toast show"+(e?" err":"");
+  setTimeout(()=>t.classList.remove("show"),2600);}
+function plural(n,a,b,c){const m=n%10,h=n%100;
+  return n+" "+(m===1&&h!==11?a:(m>=2&&m<=4&&(h<10||h>=20)?b:c));}
+
+function fmtDate(iso){
+  const d=new Date(iso+"T00:00:00");
+  return d.toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+}
+
+function bkCard(b){
+  return `<div class="bk">
+    <div class="bk-top">
+      <div>
+        <b>${b.venue.name}</b>
+        <div class="bk-meta">${CAT_LABEL[b.venue.cat]||b.venue.cat} · ${b.venue.place||""} · ${b.venue.district_name}</div>
+        <div class="bk-meta">${fmtDate(b.date)}, ${b.hour}:00 — скидка −${b.discount}% на весь счёт</div>
+        <div class="bk-code">${b.code}</div>
+      </div>
+      <span class="st ${b.status}">${ST[b.status]||b.status}</span>
+    </div>
+    ${b.status==="active"&&b.upcoming?`<div class="bk-act"><button class="btn-x" data-id="${b.id}">Отменить бронь</button></div>`:""}
+  </div>`;
+}
+
+function render(){
+  $("greet").textContent=`Здравствуйте, ${DATA.name}!`;
+  $("pts").textContent=DATA.points;
+  $("visitsLine").textContent=DATA.visits
+    ? `${plural(DATA.visits,"визит","визита","визитов")} по тихим часам`
+    : "Пока ни одного визита — самое время забронировать";
+
+  const up=DATA.bookings.filter(b=>b.upcoming);
+  const past=DATA.bookings.filter(b=>!b.upcoming);
+
+  $("scrUp").innerHTML = up.length
+    ? up.map(bkCard).join("")
+    : `<div class="empty">Активных броней нет<br><br><a class="btn-h" href="/">Выбрать заведение</a></div>`;
+  $("scrPast").innerHTML = past.length
+    ? past.map(bkCard).join("")
+    : `<div class="empty">История пока пуста</div>`;
+
+  $("pEmail").value=DATA.email||"";
+  $("pName").value=DATA.name||"";
+  $("pPhone").value=DATA.phone||"";
+}
+
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
+  $("scrUp").style.display   = t.dataset.t==="up"   ? "block":"none";
+  $("scrPast").style.display = t.dataset.t==="past" ? "block":"none";
+  $("scrProf").style.display = t.dataset.t==="prof" ? "block":"none";
+});
+
+document.addEventListener("click",async e=>{
+  const btn=e.target.closest(".btn-x"); if(!btn)return;
+  btn.disabled=true;
+  try{
+    await api("/api/guest/bookings/cancel",{method:"POST",body:JSON.stringify({booking_id:+btn.dataset.id})});
+    toast("Бронь отменена"); await load();
+  }catch(err){ toast(err.message,true); btn.disabled=false; }
+});
+
+$("saveProf").onclick=async()=>{
+  const m=$("profMsg"); m.textContent=""; m.className="msg";
+  try{
+    await api("/api/auth/profile",{method:"PATCH",body:JSON.stringify(
+      {name:$("pName").value.trim(), phone:$("pPhone").value.trim()})});
+    m.textContent="Сохранено"; m.className="msg ok";
+    await load();
+  }catch(err){ m.textContent=err.message; m.className="msg err"; }
+};
+
+$("logoutBtn").onclick=async()=>{
+  try{ await api("/api/auth/logout",{method:"POST"}); }catch(e){}
+  location.href="/";
+};
+
+async function load(){
+  const [bk,me]=await Promise.all([api("/api/guest/bookings"),api("/api/auth/me")]);
+  DATA={...bk, email:me.user.email, phone:me.user.phone};
+  render();
+}
+
+(async function boot(){
+  try{
+    await load();
+    $("loading").style.display="none";
+    $("app").style.display="block";
+  }catch(e){
+    if(e.status===401){ location.href="/login.html?next=/guest.html"; return; }
+    $("loading").textContent="Не удалось загрузить кабинет. Обновите страницу.";
+  }
+})();
+</script>
+</body>
+</html>

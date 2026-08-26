@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Вход — Тихий Час</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--ink:#1a1410;--paper:#fdfaf5;--honey:#e8a33d;--line:#e7ddce;--muted:#8a7d6c;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:var(--paper);color:var(--ink);min-height:100vh;
+       display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{width:100%;max-width:400px;background:#fff;border:1px solid var(--line);
+        border-radius:20px;padding:32px 28px;box-shadow:0 8px 30px rgba(30,20,10,.06)}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 24px}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;background:#f5efe4;border-radius:12px;padding:4px}
+  .tab{flex:1;text-align:center;padding:9px;border-radius:9px;font-size:14px;font-weight:600;
+       cursor:pointer;color:var(--muted);user-select:none}
+  .tab.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .roles{display:flex;gap:8px;margin-bottom:16px}
+  .role{flex:1;border:1.5px solid var(--line);border-radius:12px;padding:10px;text-align:center;
+        font-size:13px;cursor:pointer;color:var(--muted)}
+  .role.active{border-color:var(--honey);color:var(--ink);background:#fff8ec}
+  label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+  input[type=email],input[type=password],input[type=text],input[type=tel]{
+    width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:11px;
+    font-size:15px;background:#fff;color:var(--ink)}
+  input:focus{outline:none;border-color:var(--honey)}
+  .consent{display:flex;gap:8px;align-items:flex-start;margin-top:16px;font-size:12.5px;color:var(--muted)}
+  .consent input{margin-top:3px}
+  .consent a{color:var(--ink)}
+  button.submit{width:100%;margin-top:20px;padding:13px;border:0;border-radius:12px;
+    background:var(--honey);color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+  button.submit:disabled{opacity:.5;cursor:default}
+  .err{color:#c0392b;font-size:13px;margin-top:10px;min-height:1px}
+  .ok{color:#2a8a4a;font-size:13px;margin-top:10px}
+  .field{display:none}
+  .field.show{display:block}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1 id="title">Вход в личный кабинет</h1>
+  <p class="sub" id="subtitle">Бронируйте по тихим часам или ведите заведение</p>
+
+  <div class="tabs">
+    <div class="tab active" data-mode="login">Вход</div>
+    <div class="tab" data-mode="register">Регистрация</div>
+  </div>
+
+  <div class="roles field" id="roleBlock">
+    <div class="role active" data-role="guest">Хочу бронировать</div>
+    <div class="role" data-role="partner">У меня есть площадка</div>
+  </div>
+
+  <form id="form">
+    <div class="field show">
+      <label>E-mail</label>
+      <input type="email" id="email" required autocomplete="email">
+    </div>
+    <div class="field" id="nameField">
+      <label>Имя</label>
+      <input type="text" id="name" autocomplete="name">
+    </div>
+    <div class="field" id="phoneField">
+      <label>Телефон (можно указать позже в кабинете)</label>
+      <input type="tel" id="phone" autocomplete="tel">
+    </div>
+    <div class="field show">
+      <label>Пароль</label>
+      <input type="password" id="password" required minlength="6" autocomplete="current-password">
+    </div>
+    <div class="consent field" id="consentField">
+      <input type="checkbox" id="consent">
+      <span>Принимаю <a href="/privacy.html" target="_blank">политику конфиденциальности</a> и условия оферты</span>
+    </div>
+    <button class="submit" id="submit" type="submit">Войти</button>
+    <div class="err" id="err"></div>
+    <div class="ok" id="okmsg"></div>
+  </form>
+</div>
+
+<script>
+const API = "/api/auth";
+let mode = "login", role = "guest";
+const $ = id => document.getElementById(id);
+
+function render(){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active", t.dataset.mode===mode));
+  const isReg = mode === "register";
+  $("roleBlock").classList.toggle("show", isReg);
+  $("nameField").classList.toggle("show", isReg);
+  $("phoneField").classList.toggle("show", isReg);
+  $("consentField").classList.toggle("show", isReg);
+  $("password").autocomplete = isReg ? "new-password" : "current-password";
+  $("submit").textContent = isReg ? "Зарегистрироваться" : "Войти";
+  $("title").textContent = isReg ? "Регистрация" : "Вход в личный кабинет";
+  $("subtitle").textContent = isReg
+    ? (role==="partner" ? "Заведёте площадку и начнёте принимать брони" : "Бронируйте по тихим часам со скидкой")
+    : "Бронируйте по тихим часам или ведите заведение";
+  $("err").textContent = ""; $("okmsg").textContent = "";
+}
+
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{mode=t.dataset.mode;render();});
+document.querySelectorAll(".role").forEach(r=>r.onclick=()=>{
+  role=r.dataset.role;
+  document.querySelectorAll(".role").forEach(x=>x.classList.toggle("active",x===r));
+  render();
+});
+render();
+
+$("form").onsubmit = async (e)=>{
+  e.preventDefault();
+  $("err").textContent=""; $("okmsg").textContent="";
+  const email=$("email").value.trim(), password=$("password").value;
+  if(mode==="register" && !$("consent").checked){
+    $("err").textContent = "Нужно принять условия, чтобы продолжить"; return;
+  }
+  $("submit").disabled = true;
+  try{
+    const url = mode==="register" ? `${API}/register` : `${API}/login`;
+    const body = mode==="register"
+      ? {email,password,name:$("name").value.trim(),phone:$("phone").value.trim(),role,consent:$("consent").checked}
+      : {email,password};
+    const r = await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+                              credentials:"include",body:JSON.stringify(body)});
+    const data = await r.json();
+    if(!r.ok){ $("err").textContent = data.detail || "Не получилось, попробуйте ещё раз"; return; }
+    $("okmsg").textContent = "Готово, переходим в кабинет…";
+    const dest = data.user.role === "partner" ? "/tihiy-chas-cabinet.html" : "/app.html";
+    setTimeout(()=>location.href=dest, 500);
+  }catch(err){
+    $("err").textContent = "Сервер не отвечает, попробуйте позже";
+  }finally{
+    $("submit").disabled = false;
+  }
+};
+</script>
+</body>
+</html>

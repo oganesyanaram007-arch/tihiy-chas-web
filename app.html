@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
+<title>Тихий Час — Telegram Mini App</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!-- Google Fonts убраны: сервис недоступен в России, браузер ждал
+     таймаута с пустым экраном. Системные шрифты рисуются сразу. -->
+<style>
+:root{
+  --espresso:#191410; --espresso-2:#221A14; --oat:#F4EFE6; --porcelain:#FBF7EF;
+  --honey:#DFA63C; --honey-d:#B9822A; --dusk:#26324F;
+  --ink:#20180F; --ink-soft:#6E6456; --cream-soft:#DBD2C1; --cream-dim:#A99E8B;
+  --line-lt:#E7DECB; --line-dk:#3A2E23; --ok:#2E9E6B;
+  --disp:'New York','Iowan Old Style',Georgia,'Times New Roman',serif;
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,'Segoe UI','Roboto',sans-serif;
+  --mono:ui-monospace,'SF Mono','SFMono-Regular','Menlo',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-synthesis:none}
+/* Telegram на iOS иногда принудительно затемняет страницы — без этой
+   защиты тёмный текст на светлом фоне становится невидимым (уже ловили
+   этот баг на сайте). Явно возвращаем наши цвета при любом раскладе. */
+@media (prefers-color-scheme: dark){
+  body{background-color:var(--oat)!important}
+  .screen-wrap{background-color:var(--oat)!important}
+  .app{background-color:var(--oat)!important}
+}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none}
+.ic{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,#2A2016,#0E0A07 66%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:26px 14px;color:var(--ink)}
+.stage{display:flex;gap:36px;align-items:center;flex-wrap:wrap;justify-content:center}
+.side{max-width:250px;color:var(--cream-soft);font-size:13.5px;line-height:1.62}
+.side b{color:#FBF7EF;font-family:var(--disp);font-weight:700;font-size:17px;display:block;margin-bottom:9px}
+.side .tip{margin-top:14px;padding:13px 15px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px}
+.side .tip b{font-family:var(--sans);font-size:12.5px;color:var(--honey);margin-bottom:5px}
+@media(max-width:860px){.side{display:none}body{padding:0}}
+
+.phone{width:393px;max-width:100vw;height:812px;max-height:100vh;background:#000;border-radius:54px;padding:10px;box-shadow:0 44px 100px rgba(0,0,0,.6);position:relative}
+@media(max-width:430px){.phone{border-radius:0;padding:0;height:100vh;height:100dvh}}
+.screen-wrap{background:var(--oat);border-radius:44px;height:100%;overflow:hidden;display:flex;flex-direction:column;position:relative}
+@media(max-width:430px){.screen-wrap{border-radius:0}}
+
+.statusbar{height:34px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-family:var(--sans);font-size:13px;font-weight:700;background:var(--espresso);color:#FBF7EF;flex:none}
+.statusbar .sig{display:flex;gap:5px;align-items:center}
+.tgbar{height:50px;background:var(--espresso);color:#FBF7EF;display:flex;align-items:center;padding:0 10px;flex:none;border-bottom:1px solid var(--line-dk)}
+.tg-left{color:var(--cream-soft);font-size:14.5px;padding:8px 10px;min-width:60px;text-align:left}
+.tg-title{flex:1;display:flex;align-items:center;justify-content:center;gap:9px}
+.tg-title .mk{width:22px;height:22px;stroke:var(--honey)}
+.tg-title b{font-family:var(--disp);font-weight:700;font-size:16px}
+.tg-menu{color:var(--cream-soft);font-size:20px;padding:8px 12px;min-width:60px;text-align:right;letter-spacing:2px}
+
+.app{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-bottom:158px;scrollbar-width:none}
+.app::-webkit-scrollbar{display:none}
+.screen{display:none;animation:fade .2s ease}
+.screen.on{display:block}
+@keyframes fade{from{opacity:.3;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.screen{animation:none}}
+
+/* ---------- FEED: date + district + category ---------- */
+.loc-row{display:flex;align-items:center;gap:9px;padding:12px 16px 2px}
+.loc-pill{display:inline-flex;align-items:center;gap:6px;background:var(--porcelain);border:1px solid var(--line-lt);border-radius:999px;padding:7px 12px;font-weight:600;color:var(--ink);font-size:12.5px}
+.loc-pill .ic{width:14px;height:14px;color:var(--honey-d)}
+.live{display:flex;align-items:center;gap:6px;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--honey-d);font-weight:700}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--honey);box-shadow:0 0 0 0 rgba(223,166,60,.6);animation:pulse 2.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+.scroll-row{display:flex;gap:7px;overflow-x:auto;padding:10px 16px;scrollbar-width:none}
+.scroll-row::-webkit-scrollbar{display:none}
+.row-lbl{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);padding:0 16px;margin-top:4px}
+
+.day-chip{flex:none;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:56px;padding:7px 10px;border:1.4px solid var(--line-lt);border-radius:12px;background:var(--porcelain)}
+.day-chip .dw{font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.day-chip .dd{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap}
+.day-chip .dn{font-family:var(--mono);font-size:8px;color:var(--honey-d);font-weight:700}
+.day-chip.on{background:var(--espresso);border-color:var(--espresso)}
+.day-chip.on .dw{color:var(--cream-dim)}
+.day-chip.on .dd{color:#FBF7EF}
+.day-chip.on .dn{color:var(--honey)}
+.day-chip.off{opacity:.4}
+
+.dist-chip{flex:none;padding:7px 13px;border-radius:999px;border:1.4px solid var(--line-lt);background:var(--porcelain);font-size:12px;font-weight:600;color:var(--ink)}
+.dist-chip.on{background:var(--honey);border-color:var(--honey);color:var(--espresso)}
+
+.cats{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 10px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:none;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:600;background:var(--porcelain);border:1.5px solid var(--line-lt);color:var(--ink)}
+.cat .ic{width:14px;height:14px}
+.cat.on{background:var(--espresso);color:#FBF7EF;border-color:var(--espresso)}
+.sect-cap{padding:6px 16px 10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+
+.list{padding:0 16px;display:flex;flex-direction:column;gap:11px}
+.vcard{background:var(--porcelain);border:1px solid var(--line-lt);border-radius:18px;overflow:hidden}
+.vc-cover{position:relative;height:78px}
+.vc-cover .art{position:absolute;inset:0}
+.art-food{background:radial-gradient(90% 120% at 22% 10%,#3C6A5B,transparent 62%),linear-gradient(150deg,#1D4A3E,#0E2A24 78%)}
+.art-coffee{background:radial-gradient(90% 120% at 22% 10%,#A87C46,transparent 62%),linear-gradient(150deg,#6B4726,#2E1D0F 78%)}
+.art-beauty{background:radial-gradient(90% 120% at 22% 10%,#B4658C,transparent 62%),linear-gradient(150deg,#7A3055,#2E1122 78%)}
+.art-spa{background:radial-gradient(90% 120% at 22% 10%,#4E93A8,transparent 62%),linear-gradient(150deg,#1F5468,#0C2732 78%)}
+.art-fun{background:radial-gradient(90% 120% at 22% 10%,#7C63C4,transparent 62%),linear-gradient(150deg,#4A337E,#1B1233 78%)}
+.art-auto{background:radial-gradient(90% 120% at 22% 10%,#5D7A90,transparent 62%),linear-gradient(150deg,#31485A,#131E27 78%)}
+.vc-off{position:absolute;right:10px;top:10px;font-family:var(--mono);font-weight:700;font-size:13px;color:var(--espresso);background:var(--honey);border-radius:999px;padding:4px 9px}
+.vc-ic-mini{position:absolute;left:10px;bottom:8px;width:32px;height:32px;border-radius:9px;background:rgba(25,18,14,.55);backdrop-filter:blur(4px);display:grid;place-items:center;color:var(--honey)}
+.vc-body{padding:12px 13px}
+.vc-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.vc-name{font-family:var(--disp);font-weight:700;font-size:17px;color:var(--ink)}
+.vc-rate{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--honey-d)}
+.vc-meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+.vc-slots{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+.vslot{font-family:var(--mono);font-size:10.5px;font-weight:700;background:var(--oat);border:1px solid var(--line-lt);border-radius:7px;padding:4px 7px}
+.vslot em{font-style:normal;color:var(--honey-d)}
+.vc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:9px;border-top:1px solid var(--line-lt)}
+.vc-left{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--honey-d)}
+.vc-go{font-size:12px;font-weight:700;color:var(--ink)}
+.empty{padding:36px 22px;text-align:center;font-family:var(--disp);font-style:italic;font-size:17px;color:var(--ink-soft)}
+
+/* ---------- VENUE ---------- */
+.v-hero{padding:16px 16px 6px;display:flex;gap:12px;align-items:center}
+.v-ic{width:56px;height:56px;border-radius:16px;background:var(--espresso);color:var(--honey);display:grid;place-items:center;flex:none}
+.v-ic .ic{width:28px;height:28px}
+.v-name{font-family:var(--disp);font-weight:700;font-size:20px;color:var(--ink)}
+.v-sub{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.v-rate{margin-left:auto;font-family:var(--mono);font-weight:700;font-size:12.5px;color:var(--honey-d)}
+.v-days{display:flex;gap:7px;overflow-x:auto;padding:12px 16px 4px;scrollbar-width:none}
+.v-days::-webkit-scrollbar{display:none}
+.slot-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px 16px}
+.slot-b{background:var(--porcelain);border:1.5px solid var(--line-lt);border-radius:13px;padding:10px 6px;text-align:center;font-family:var(--mono);font-weight:700;font-size:13px;color:var(--ink)}
+.slot-b em{font-style:normal;display:block;font-size:10.5px;color:var(--honey-d);margin-top:2px}
+.slot-b.sel{border-color:var(--honey);background:#FBEFD6}
+.slot-empty{padding:18px 16px;text-align:center;color:var(--ink-soft);font-size:13px}
+.info-card{margin:12px 16px;background:var(--porcelain);border:1px solid var(--line-lt);border-radius:16px;padding:4px 15px}
+.info-row{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line-lt);font-size:13px;line-height:1.4;color:var(--ink)}
+.info-row:last-child{border:none}
+.info-row .ic{width:18px;height:18px;color:var(--honey-d);margin-top:1px}
+.info-row b{font-weight:700}
+.info-row small{display:block;color:var(--ink-soft);font-size:11.5px;margin-top:2px}
+
+/* ---------- SUCCESS ---------- */
+.ok-wrap{text-align:center;padding:24px 20px 0}
+.ok-badge{width:68px;height:68px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;margin:6px auto 14px;box-shadow:0 12px 28px -8px rgba(46,158,107,.55)}
+.ok-badge .ic{width:34px;height:34px;stroke-width:2.4}
+.ok-wrap h2{font-family:var(--disp);font-weight:700;font-size:21px;color:var(--ink)}
+.ok-wrap .p{font-size:12.5px;color:var(--ink-soft);margin-top:4px}
+.qr{width:142px;height:142px;margin:16px auto 6px;border-radius:14px;background:repeating-conic-gradient(var(--espresso) 0 25%,#fff 0 50%);background-size:20px 20px;border:8px solid #fff;outline:1px solid var(--line-lt)}
+.code{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--honey-d)}
+.ok-details{margin:14px 16px 0;text-align:left}
+.ghost-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 16px 0;background:var(--porcelain);border:1.5px solid var(--line-lt);border-radius:14px;padding:13px;font-size:13.5px;font-weight:700;color:var(--ink);width:calc(100% - 32px)}
+.ghost-btn .ic{width:17px;height:17px;color:var(--honey-d)}
+
+/* ---------- BOOKINGS ---------- */
+.saved{margin:16px 16px;background:var(--espresso);color:#FBF7EF;border-radius:20px;padding:18px}
+.saved .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--cream-soft)}
+.saved b{font-family:var(--disp);font-weight:700;font-size:27px;display:block;margin-top:5px}
+.bk-card{margin:0 16px 10px;background:var(--porcelain);border:1px solid var(--line-lt);border-radius:16px;padding:13px}
+.bk-top{display:flex;gap:11px;align-items:center}
+.bk-top .v-ic{width:42px;height:42px;border-radius:11px}
+.bk-top .bk-ic{width:42px;height:42px;border-radius:11px;background:var(--espresso);color:var(--honey);display:grid;place-items:center;flex:none}
+.bk-ic .ic{width:21px;height:21px}
+.bk-name{font-weight:700;font-size:13.5px;color:var(--ink)}
+.bk-when{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);margin-top:2px}
+.bk-eta{margin-left:auto;font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--honey-d);background:#FBEFD6;border-radius:8px;padding:5px 8px;text-align:center;line-height:1.2}
+.bk-past .bk-eta{color:var(--ink-soft);background:var(--oat)}
+.bk-save{font-family:var(--mono);font-size:10.5px;color:var(--ok);font-weight:700;margin-top:8px;display:flex;align-items:center;gap:5px}
+.bk-save .ic{width:13px;height:13px;flex:none}
+
+/* ---------- PROFILE ---------- */
+.pr-head{display:flex;gap:12px;align-items:center;padding:18px 16px 8px}
+.ava{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--honey),var(--honey-d));display:grid;place-items:center;color:var(--espresso);font-family:var(--disp);font-weight:700;font-size:19px}
+.pr-name{font-family:var(--disp);font-weight:700;font-size:18px;color:var(--ink)}
+.pr-sub{font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+.bonus{margin:9px 16px;background:var(--espresso);color:#FBF7EF;border-radius:18px;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.bonus .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--cream-soft)}
+.bonus b{font-family:var(--disp);font-weight:700;font-size:24px;color:var(--honey);display:block;margin-top:3px}
+.bonus .goal{font-size:11px;color:var(--cream-soft);margin-top:4px}
+.pbar{height:5px;background:rgba(255,255,255,.14);border-radius:99px;margin-top:8px;overflow:hidden;max-width:150px}
+.pbar i{display:block;height:100%;background:var(--honey)}
+.invite{background:var(--honey);color:var(--espresso);font-weight:700;border-radius:11px;padding:10px 13px;font-size:11.5px;text-align:center;line-height:1.2;flex:none}
+.set{margin:9px 16px;background:var(--porcelain);border:1px solid var(--line-lt);border-radius:16px;padding:2px 15px}
+.set-row{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line-lt);font-size:13px;color:var(--ink)}
+.set-row:last-child{border:none}
+.set-row .ic{width:18px;height:18px;color:var(--honey-d)}
+.set-row .r{margin-left:auto;color:var(--ink-soft);font-size:12px;font-family:var(--mono)}
+.tgl{margin-left:auto;width:40px;height:24px;border-radius:999px;background:var(--honey);position:relative;flex:none;transition:.2s}
+.tgl::after{content:"";position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.tgl.off{background:#CDC3B2}.tgl.off::after{right:auto;left:3px}
+
+/* ---------- TABBAR + MAINBUTTON ---------- */
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:76px;background:var(--espresso);border-top:1px solid var(--line-dk);display:flex;padding:8px 6px 20px;border-radius:0 0 44px 44px}
+@media(max-width:430px){.tabbar{border-radius:0}}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.03em;color:var(--cream-dim)}
+.tab .ic{width:20px;height:20px}
+.tab.sel{color:var(--honey)}
+.mainbtn{position:absolute;left:14px;right:14px;bottom:88px;height:50px;border-radius:14px;background:var(--honey);color:var(--espresso);font-size:14.5px;font-weight:700;box-shadow:0 12px 28px -8px rgba(223,166,60,.6);display:none;align-items:center;justify-content:center;gap:8px;z-index:20}
+.mainbtn.show{display:flex}
+.mainbtn:active{transform:scale(.985)}
+
+/* ---------- PAY SHEET ---------- */
+.psheet{position:absolute;inset:0;background:rgba(14,10,7,.55);backdrop-filter:blur(3px);display:none;align-items:flex-end;z-index:40;border-radius:44px}
+@media(max-width:430px){.psheet{border-radius:0}}
+.psheet.open{display:flex}
+.ps-in{background:var(--oat);width:100%;border-radius:26px 26px 44px 44px;padding:18px 16px 24px;animation:up .24s ease}
+@media(max-width:430px){.ps-in{border-radius:26px 26px 0 0}}
+@keyframes up{from{transform:translateY(30px)}to{transform:none}}
+.ps-grab{width:38px;height:4px;border-radius:99px;background:var(--line-lt);margin:0 auto 14px}
+.ps-in h3{font-family:var(--disp);font-weight:700;font-size:17px;color:var(--ink)}
+.ps-in .sub{font-size:12px;color:var(--ink-soft);margin:3px 0 14px}
+.pay-m{display:flex;gap:11px;align-items:center;border:1.5px solid var(--line-lt);border-radius:14px;padding:12px;margin-bottom:8px;font-size:13.5px;font-weight:600;color:var(--ink);background:var(--porcelain)}
+.pay-m .pi{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--oat);color:var(--honey-d)}
+.pay-m .pi .ic{width:17px;height:17px}
+.pay-m .rad{margin-left:auto;width:19px;height:19px;border-radius:50%;border:2px solid var(--line-lt)}
+.pay-m.sel{border-color:var(--honey)}
+.pay-m.sel .rad{border-color:var(--honey);background:radial-gradient(circle,var(--honey) 0 45%,transparent 46%)}
+.pay-m.lock{opacity:.5;pointer-events:none}
+.ps-pay{width:100%;height:48px;border-radius:14px;background:var(--espresso);color:#FBF7EF;font-size:14.5px;font-weight:700;margin-top:6px}
+.ps-note{text-align:center;font-family:var(--mono);font-size:10px;color:var(--ink-soft);margin-top:9px}
+
+.toast{position:absolute;left:50%;bottom:170px;transform:translateX(-50%) translateY(8px);background:var(--espresso);color:#FBF7EF;font-size:12.5px;font-weight:600;border-radius:12px;padding:10px 16px;opacity:0;pointer-events:none;transition:.25s;z-index:60;white-space:nowrap;box-shadow:0 14px 34px rgba(0,0,0,.4)}
+.toast.show{opacity:1;transform:translateX(-50%)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="ic-clock"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></g>
+  <g id="ic-cup"><path d="M4 8h11v5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8Z"/><path d="M15 9h2.5a2.5 2.5 0 0 1 0 5H15"/><path d="M7 3.5c-.4.7-.4 1.3 0 2M10.5 3.5c-.4.7-.4 1.3 0 2"/></g>
+  <g id="ic-food"><path d="M6 3v8M6 3a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2M8 3v3a2 2 0 0 1-2 2M6 11v10M17 3c-1.5 0-2.5 2-2.5 5s1 4 2.5 4m0-9v18"/></g>
+  <g id="ic-scissors"><circle cx="6" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><path d="M8 8.5 20 17M8 15.5 20 7"/></g>
+  <g id="ic-spa"><path d="M12 21c-4-2-7-5-7-8.5A3.5 3.5 0 0 1 12 10a3.5 3.5 0 0 1 7 2.5C19 16 16 19 12 21Z"/><path d="M12 10c0-2 1-4 3-5M12 10c0-2-1-4-3-5"/></g>
+  <g id="ic-key"><circle cx="8" cy="8" r="4"/><path d="M11 11l8 8M16 16l2-2M18.5 18.5l1.5-1.5"/></g>
+  <g id="ic-drop"><path d="M12 3s6 6.5 6 10.5A6 6 0 0 1 6 13.5C6 9.5 12 3 12 3Z"/></g>
+  <g id="ic-pin"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></g>
+  <g id="ic-check"><path d="M4.5 12.5 9.5 17.5 20 6.5"/></g>
+  <g id="ic-arrow"><path d="M4 12h16M13 5l7 7-7 7"/></g>
+  <g id="ic-spark"><path d="M12 3v6M12 15v6M3 12h6M15 12h6M6.5 6.5l3.2 3.2M14.3 14.3l3.2 3.2M17.5 6.5l-3.2 3.2M9.7 14.3l-3.2 3.2"/></g>
+  <g id="ic-bolt"><path d="M13 3 5 13h5l-1 8 8-10h-5l1-8Z"/></g>
+  <g id="ic-return"><path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></g>
+  <g id="ic-receipt"><path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21V3Z"/><path d="M9 8h6M9 12h6"/></g>
+  <g id="ic-ticket"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2 2 2 0 0 0 0-4Z"/><path d="M14 6v2M14 12v2"/></g>
+  <g id="ic-user"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/></g>
+  <g id="ic-bell"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6ZM10 20a2 2 0 0 0 4 0"/></g>
+  <g id="ic-moon"><path d="M20 14a8 8 0 1 1-10-10 6.5 6.5 0 0 0 10 10Z"/></g>
+  <g id="ic-chat"><path d="M4 5h16v11H9l-5 4V5Z"/></g>
+  <g id="ic-mark"><circle cx="12" cy="12" r="9"/><path d="M12 12V6.5M12 12L15.12 10.2"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></g>
+  <g id="ic-spb"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6l-7-3Z"/></g>
+</defs></svg>
+
+<div class="stage">
+  <div class="side">
+    <b>Тихий Час · Mini App</b>
+    Гостевое приложение внутри Telegram — без установки, вход в один тап. Теперь с выбором даты и района, как на сайте.
+    <div class="tip"><b>Прототип кликабелен</b>Выберите день и район, откройте заведение, «оплатите» депозит 99 ₽ и получите QR. Вкладки внизу — Лента, Брони, Профиль.</div>
+    <div class="tip"><b>Синхронизировано с ботом</b>34 заведения, 15 районов Петербурга, бронь на 14 дней вперёд, единый депозит 99 ₽.</div>
+  </div>
+
+  <div class="phone"><div class="screen-wrap">
+    <div class="statusbar"><span id="clock">14:37</span><span class="sig">●●● ▪ 100</span></div>
+    <div class="tgbar">
+      <button class="tg-left" id="tgLeft">Закрыть</button>
+      <div class="tg-title"><svg class="mk ic" viewBox="0 0 24 24"><use href="#ic-mark"/></svg><b>Тихий Час</b></div>
+      <button class="tg-menu">⋮</button>
+    </div>
+
+    <div class="app" id="app">
+
+      <!-- ===== ЛЕНТА ===== -->
+      <section class="screen on" id="scr-feed">
+        <div class="loc-row">
+          <span class="loc-pill"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-pin"/></svg><span id="distLabel">Весь Петербург</span></span>
+          <span class="live"><span class="pulse"></span><span id="liveTxt">тихий час</span></span>
+        </div>
+
+        <div class="row-lbl">Когда</div>
+        <div class="scroll-row" id="dayRow"></div>
+
+        <div class="row-lbl">Район</div>
+        <div class="scroll-row" id="distRow"></div>
+
+        <div class="cats" id="cats">
+          <button class="cat on" data-c="all">Все</button>
+          <button class="cat" data-c="food"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-food"/></svg>Еда</button>
+          <button class="cat" data-c="coffee"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-cup"/></svg>Кофе</button>
+          <button class="cat" data-c="beauty"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-scissors"/></svg>Красота</button>
+          <button class="cat" data-c="spa"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-spa"/></svg>СПА</button>
+          <button class="cat" data-c="fun"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-key"/></svg>Досуг</button>
+          <button class="cat" data-c="auto"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-drop"/></svg>Авто</button>
+        </div>
+
+        <div class="sect-cap" id="feedCap">Тихие окна</div>
+        <div class="list" id="feedList"></div>
+      </section>
+
+      <!-- ===== ЗАВЕДЕНИЕ ===== -->
+      <section class="screen" id="scr-venue">
+        <div class="v-hero">
+          <div class="v-ic"><svg class="ic" id="vIcon" viewBox="0 0 24 24"><use href="#ic-food"/></svg></div>
+          <div><div class="v-name" id="vName">—</div><div class="v-sub" id="vSub">—</div></div>
+          <div class="v-rate" id="vRate">★ —</div>
+        </div>
+        <div class="row-lbl">Выберите день</div>
+        <div class="v-days" id="vDays"></div>
+        <div class="row-lbl">Свободные часы</div>
+        <div class="slot-grid" id="vSlots"></div>
+        <div class="info-card">
+          <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-bolt"/></svg><div>Депозит 99 ₽ — <b>зачитывается в счёт</b><small>заплатите на месте на 99 ₽ меньше</small></div></div>
+          <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-return"/></svg><div>Отмена за 3 часа — бесплатно<small>депозит вернётся автоматически</small></div></div>
+          <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-receipt"/></svg><div>Скидка от текущей цены<small>без завышенного прайса, проверяем визитами</small></div></div>
+        </div>
+      </section>
+
+      <!-- ===== УСПЕХ ===== -->
+      <section class="screen" id="scr-ok">
+        <div class="ok-wrap">
+          <div class="ok-badge"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-check"/></svg></div>
+          <h2>Место закреплено!</h2>
+          <div class="p" id="okSub">—</div>
+          <div class="qr"></div>
+          <div class="code" id="okCode">ТЧ-0000</div>
+          <div class="p" style="margin-top:8px">При входе покажите QR — за вами закрепят столик и отметят визит в системе</div>
+        </div>
+        <div class="info-card ok-details" id="okDetails"></div>
+        <button class="ghost-btn" id="remindBtn"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-bell"/></svg>Напомнить за 2 часа</button>
+      </section>
+
+      <!-- ===== БРОНИ ===== -->
+      <section class="screen" id="scr-bk">
+        <div class="saved"><div class="lbl">Вы сэкономили с «Тихим Часом»</div><b id="savedSum">3 240 ₽</b></div>
+        <div class="sect-cap">Предстоящие</div>
+        <div id="bkUp"></div>
+        <div class="sect-cap">Прошедшие</div>
+        <div class="bk-card bk-past"><div class="bk-top"><div class="bk-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-cup"/></svg></div><div><div class="bk-name">Крем</div><div class="bk-when">15.08 · 10:30 · −30%</div></div><div class="bk-eta">визит<br>состоялся</div></div><div class="bk-save"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-check"/></svg>Сэкономлено 210 ₽</div></div>
+        <div class="bk-card bk-past"><div class="bk-top"><div class="bk-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-scissors"/></svg></div><div><div class="bk-name">Мята</div><div class="bk-when">10.08 · 12:00 · −35%</div></div><div class="bk-eta">визит<br>состоялся</div></div><div class="bk-save"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-check"/></svg>Сэкономлено 525 ₽</div></div>
+      </section>
+
+      <!-- ===== ПРОФИЛЬ ===== -->
+      <section class="screen" id="scr-pr">
+        <div class="pr-head"><div class="ava" id="prAva">А</div><div><div class="pr-name" id="prName">Алексей</div><div class="pr-sub">гость с августа 2026 · Санкт-Петербург</div></div></div>
+        <div class="bonus">
+          <div><div class="lbl">Тихие баллы</div><b id="ptsBal">120</b><div class="goal" id="ptsGoal">ещё 0 до бесплатной брони</div><div class="pbar"><i id="ptsBar" style="width:100%"></i></div></div>
+          <button class="invite" id="inviteBtn">Пригласить<br>+200 баллов</button>
+        </div>
+        <div class="set">
+          <div class="set-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-spark"/></svg>Статус: Гость<span class="r" id="visGoal">2 / 6 до «Свой»</span></div>
+          <div class="set-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-bell"/></svg>Новые окна рядом<span class="tgl" data-t></span></div>
+          <div class="set-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-moon"/></svg>Тихие часы вечером<span class="tgl off" data-t></span></div>
+          <div class="set-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-pin"/></svg>Район поиска<span class="r" id="prDist">Весь Петербург</span></div>
+          <div class="set-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-chat"/></svg>Поддержка<span class="r">@Tihiy_chas_yourbot</span></div>
+        </div>
+      </section>
+    </div>
+
+    <button class="mainbtn" id="mainBtn"></button>
+
+    <div class="tabbar">
+      <button class="tab sel" data-t="feed"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-clock"/></svg>Лента</button>
+      <button class="tab" data-t="bk"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-ticket"/></svg>Брони</button>
+      <button class="tab" data-t="pr"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-user"/></svg>Профиль</button>
+    </div>
+
+    <!-- PAY SHEET -->
+    <div class="psheet" id="pay">
+      <div class="ps-in">
+        <div class="ps-grab"></div>
+        <h3 id="payTitle">Депозит за бронь · 99 ₽</h3>
+        <div class="sub" id="paySub">—</div>
+        <div class="pay-m sel" data-m="0"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-spb"/></svg></span>СБП · Система быстрых платежей<span class="rad"></span></div>
+        <div class="pay-m" data-m="1"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-receipt"/></svg></span>Карта •• 4212<span class="rad"></span></div>
+        <div class="pay-m lock" data-m="2" id="payPts"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-spark"/></svg></span><span id="payPtsTxt">Баллами · нужно 99, у вас 120</span><span class="rad"></span></div>
+        <button class="ps-pay" id="psPay">Оплатить 99 ₽</button>
+        <div class="ps-note">Чек по 54-ФЗ пришлёт @Tihiy_chas_yourbot · депозит зачитывается в счёт</div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div></div>
+</div>
+
+<script>
+const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+// Надёжный признак, что приложение реально открыто внутри клиента Telegram
+// (а не просто как обычная веб-страница): непустая initData появляется
+// только когда сам Telegram по-настоящему запустил мини-апп.
+// initData Telegram передаёт не всегда — зависит от способа открытия.
+// Проверяем несколько признаков, любой означает, что мы внутри клиента.
+const inRealTelegram = !!(tg && (
+  (tg.initData && tg.initData.length > 0) ||
+  (tg.initDataUnsafe && tg.initDataUnsafe.user) ||
+  (tg.platform && tg.platform !== "unknown") ||
+  tg.isExpanded !== undefined
+));
+if(inRealTelegram){
+  // У настоящего Telegram уже есть собственная верхняя панель и статус-бар —
+  // наша декоративная имитация нужна только для показа дизайна в браузере
+  // отдельно от Telegram. Внутри реального клиента она лишняя и задваивает
+  // интерфейс — скрываем её полностью.
+  document.querySelectorAll('.statusbar, .tgbar').forEach(el => el.style.display = 'none');
+}
+if(tg){try{tg.ready();tg.expand();tg.setHeaderColor('#191410');tg.setBackgroundColor('#F4EFE6');
+  const u=tg.initDataUnsafe&&tg.initDataUnsafe.user;
+  if(u){document.getElementById('prName').textContent=u.first_name||'Гость';document.getElementById('prAva').textContent=(u.first_name||'Г')[0];}
+}catch(e){}}
+function hap(){if(tg&&tg.HapticFeedback){try{tg.HapticFeedback.impactOccurred('light')}catch(e){}}}
+const $=id=>document.getElementById(id);
+
+/* ---------- сетевой слой: витрина и брони живут на сервере ---------- */
+const API_URL = "/api/guest";
+const INIT = (tg && tg.initData) || "";
+let AVAIL = {};        // {venue_id:{hour: свободных мест}} на выбранный день
+let MYBOOKINGS = [];   // брони гостя с сервера
+let LOADED = false;
+let LOAD_ERR = false;   // загрузка сорвалась — лента должна предлагать повтор
+
+const API_TIMEOUT = 10000;
+async function api(path, opts={}){
+  // Без таймаута зависшая мобильная сеть оставляла экран на «Загружаем…»
+  // навсегда: запрос не отвечал и не падал, выйти было нельзя.
+  const ctl = ("AbortController" in window) ? new AbortController() : null;
+  const t = ctl ? setTimeout(()=>ctl.abort(), API_TIMEOUT) : null;
+  let r;
+  try{
+    r = await fetch(API_URL + path, {
+      ...opts,
+      signal: ctl ? ctl.signal : undefined,
+      headers:{"Content-Type":"application/json","X-Init-Data":INIT, ...(opts.headers||{})}
+    });
+  }catch(e){
+    throw new Error(e && e.name==="AbortError" ? "Сервер не ответил вовремя" : "Нет связи с сервером");
+  }finally{ if(t) clearTimeout(t); }
+  // При ответе HTML (502 от nginx) разбор молча давал {}, и гость видел
+  // английскую ошибку движка. Теперь это честная ошибка на русском.
+  let data = null, parsed = true;
+  try { data = await r.json(); } catch(e){ parsed = false; }
+  if(!r.ok) throw new Error((data && data.detail) || "Сервер недоступен");
+  if(!parsed || data === null) throw new Error("Сервер вернул неожиданный ответ");
+  return data;
+}
+function isoDate(off){
+  const d=dateFor(off);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+/* ---------- данные: 34 заведения, 15 районов — синхронизировано с сайтом и ботом ---------- */
+const DEP=99;
+const DISTRICTS=[
+ ["all","Весь Петербург"],["petro","Петроградский"],["centr","Центральный"],["adm","Адмиралтейский"],
+ ["vasil","Василеостровский"],["mosk","Московский"],["nev","Невский"],["primor","Приморский"],
+ ["vyb","Выборгский"],["kalin","Калининский"],["kirov","Кировский"],["frunz","Фрунзенский"],
+ ["krasnog","Красногвардейский"],["krasnos","Красносельский"],["push","Пушкинский"]
+];
+const DN=Object.fromEntries(DISTRICTS);
+const HOURS=[10,11,12,13,14,15,16,17,18,19,20,21];
+const IC={food:"ic-food",coffee:"ic-cup",beauty:"ic-scissors",spa:"ic-spa",fun:"ic-key",auto:"ic-drop"};
+const CN={food:"Ресторан",coffee:"Кофейня",beauty:"Красота",spa:"СПА",fun:"Досуг",auto:"Авто"};
+const WD5=[1,2,3,4,5], WD6=[1,2,3,4,5,6], WD7=[0,1,2,3,4,5,6], WD4=[1,2,3,4];
+let V=[];            // витрина приходит с сервера: GET /api/guest/venues
+
+let cat="all", dist="all", dayOff=0, vIdx=0, slotIdx=0, mDay=0, booking=null;
+let PTS=120, VIS=2;
+
+/* ---------- дни недели / даты ---------- */
+const WDS=["вс","пн","вт","ср","чт","пт","сб"];
+const MON=["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"];
+function dateFor(off){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+off);return d;}
+function dayLabel(off){if(off===0)return"Сегодня";if(off===1)return"Завтра";const d=dateFor(off);return d.getDate()+" "+MON[d.getMonth()];}
+function worksOn(v,off){const wd=dateFor(off).getDay();return v.wd.includes(wd);}
+function slotsFor(v,off){
+  if(!worksOn(v,off))return[];
+  let sl=v.slots;
+  if(off===0){const nowH=new Date().getHours();sl=sl.filter(s=>s[0]>nowH);}
+  // прячем окна, где мест уже не осталось: иначе гость платит депозит
+  // за стол, которого нет. Данные приходят из GET /availability.
+  if(off===dayOff && AVAIL && Object.keys(AVAIL).length){
+    const a=AVAIL[String(v.id)]||{};
+    sl=sl.filter(s=>(a[String(s[0])]??0)>0);
+  }
+  return sl;
+}
+function leftFor(v,off,hour){
+  if(off!==dayOff)return null;
+  const a=AVAIL[String(v.id)];if(!a)return null;
+  return a[String(hour)]??null;
+}
+function countFor(off){
+  return V.filter(v=>{
+    const okD=dist==="all"||v.d===dist, okC=cat==="all"||v.cat===cat;
+    return okD&&okC&&slotsFor(v,off).length>0;
+  }).length;
+}
+
+/* ---------- clock ---------- */
+function clock(){const d=new Date();$("clock").textContent=d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+ const h=d.getHours(),inH=h>=10&&h<22;
+ $("liveTxt").textContent=inH?"тихий час":"вечерний пик";}
+
+/* ---------- дни в ленте (7 кнопок) ---------- */
+function dayRow(){
+ const box=$("dayRow");box.innerHTML="";
+ for(let off=0;off<7;off++){
+   const n=countFor(off);
+   const b=document.createElement("button");
+   b.className="day-chip"+(dayOff===off?" on":"")+(n===0?" off":"");
+   const d=dateFor(off);
+   b.innerHTML=`<span class="dw">${WDS[d.getDay()]}</span><span class="dd">${dayLabel(off)}</span><span class="dn">${n||"—"}</span>`;
+   b.onclick=async()=>{hap();dayOff=off;dayRow();distRow();feed();
+     await loadAvailability();dayRow();distRow();feed();};
+   box.appendChild(b);
+ }
+}
+
+/* ---------- районы ---------- */
+function distRow(){
+ const box=$("distRow");box.innerHTML="";
+ DISTRICTS.forEach(([id,name])=>{
+   const n = id==="all" ? V.filter(v=>slotsFor(v,dayOff).length>0).length
+                        : V.filter(v=>v.d===id&&slotsFor(v,dayOff).length>0).length;
+   if(id!=="all"&&n===0)return;
+   const b=document.createElement("button");
+   b.className="dist-chip"+(dist===id?" on":"");
+   b.textContent=name+(n?" "+n:"");
+   b.onclick=()=>{hap();dist=id;$("distLabel").textContent=name;$("prDist").textContent=name;distRow();feed();};
+   box.appendChild(b);
+ });
+}
+
+/* ---------- лента ---------- */
+function showLoadError(msg){
+  // Наружу показываем только наши человеческие формулировки: техническое
+  // сообщение движка гостю ничего не говорит и выглядит поломкой.
+  if(!msg || !/[а-яА-Я]/.test(msg)) msg = "Не удалось загрузить заведения";
+  // Кнопка, а не совет «потяните вниз»: такого жеста в мини-аппе нет.
+  $("feedList").innerHTML='<div class="empty">'+msg+
+    '.<br>Проверьте связь.<br><button id="retryBtn" class="ghost-btn" style="margin-top:14px">Повторить</button></div>';
+  const rb=$("retryBtn");
+  if(rb) rb.onclick=()=>{hap();location.reload();};
+}
+function feed(){
+ const L=$("feedList");
+ // Если данные не загрузились, переключение категории или района не должно
+ // показывать «здесь пусто» — это вводит в заблуждение. Показываем причину.
+ if(LOAD_ERR){ showLoadError(); return; }
+ L.innerHTML="";let n=0;
+ $("feedCap").textContent=`Тихие окна · ${dayLabel(dayOff)}`;
+ V.forEach((v,i)=>{
+  const okD=dist==="all"||v.d===dist, okC=cat==="all"||v.cat===cat;
+  const daySlots=slotsFor(v,dayOff);
+  if(!(okD&&okC)||!daySlots.length)return;
+  n++;
+  const best=Math.max(...daySlots.map(s=>s[1]));
+  const el=document.createElement("div");el.className="vcard";
+  el.innerHTML=`
+   <div class="vc-cover"><div class="art art-${v.cat}"></div>
+     <span class="vc-off">−${best}%</span>
+     <span class="vc-ic-mini"><svg class="ic" style="width:17px;height:17px" viewBox="0 0 24 24"><use href="#${IC[v.cat]}"/></svg></span></div>
+   <div class="vc-body">
+     <div class="vc-top"><span class="vc-name">${v.name}</span><span class="vc-rate">★ ${v.rate}</span></div>
+     <div class="vc-meta">${v.place} · ${DN[v.d]}</div>
+     <div class="vc-slots">${daySlots.map(s=>`<span class="vslot">${s[0]}:00 <em>−${s[1]}%</em></span>`).join("")}</div>
+     <div class="vc-foot"><span class="vc-left">${v.left}</span><span class="vc-go">Забронировать →</span></div>
+   </div>`;
+  el.onclick=()=>openVenue(i);
+  L.appendChild(el);
+ });
+ if(!n){const d=document.createElement("div");d.className="empty";
+   d.textContent=`На ${dayLabel(dayOff).toLowerCase()} здесь пусто — попробуйте другой день`;L.appendChild(d);}
+}
+$("cats").addEventListener("click",e=>{const b=e.target.closest(".cat");if(!b)return;hap();
+ document.querySelectorAll(".cat").forEach(x=>x.classList.remove("on"));b.classList.add("on");cat=b.dataset.c;distRow();feed();});
+
+/* ---------- роутер ---------- */
+const SCR={feed:"scr-feed",venue:"scr-venue",ok:"scr-ok",bk:"scr-bk",pr:"scr-pr"};
+let screen="feed", tab="feed";
+function go(s){screen=s;Object.values(SCR).forEach(id=>$(id).classList.remove("on"));$(SCR[s]).classList.add("on");
+ $("app").scrollTop=0;$("tgLeft").textContent=(s==="venue"||s==="ok")?"‹ Назад":"Закрыть";
+ const mb=$("mainBtn");
+ if(s==="venue"){mb.className="mainbtn show";setMB();}
+ else if(s==="ok"){mb.className="mainbtn show";mb.textContent="К моим броням";}
+ else mb.className="mainbtn";
+ if(tg){try{(s==="venue"||s==="ok")?tg.BackButton.show():tg.BackButton.hide()}catch(e){}}}
+$("tgLeft").onclick=()=>{hap();if(screen==="venue")go("feed");else if(screen==="ok")go(tab==="bk"?"bk":"feed");else toast("В Telegram здесь закроется приложение");};
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{hap();
+ document.querySelectorAll(".tab").forEach(x=>x.classList.remove("sel"));t.classList.add("sel");tab=t.dataset.t;go(tab);});
+
+/* ---------- заведение ---------- */
+function venueDays(v){const out=[];for(let off=0;off<7;off++)if(worksOn(v,off))out.push(off);return out;}
+function openVenue(i){hap();vIdx=i;const v=V[i];mDay=venueDays(v).includes(dayOff)?dayOff:venueDays(v)[0]??0;
+ $("vIcon").innerHTML=`<use href="#${IC[v.cat]}"/>`;
+ $("vName").textContent=v.name;$("vSub").textContent=v.place+" · "+DN[v.d];$("vRate").textContent="★ "+v.rate;
+ renderVenueDays(v);renderVenueSlots(v);
+ go("venue");}
+function renderVenueDays(v){
+ const days=venueDays(v);
+ $("vDays").innerHTML=days.map(off=>{const d=dateFor(off);
+  return `<button class="day-chip${off===mDay?" on":""}" data-off="${off}"><span class="dw">${WDS[d.getDay()]}</span><span class="dd">${dayLabel(off)}</span></button>`;
+ }).join("");
+}
+function renderVenueSlots(v){
+ const sl=slotsFor(v,mDay);slotIdx=0;
+ if(!sl.length){$("vSlots").innerHTML="";$("vSlots").insertAdjacentHTML("afterend",'');
+   $("vSlots").parentElement.querySelector(".slot-empty")?.remove();
+   const empty=document.createElement("div");empty.className="slot-empty";empty.textContent="В этот день у заведения нет тихих часов";
+   $("vSlots").replaceWith(empty);empty.id="vSlots";return;}
+ $("vSlots").innerHTML=sl.map((s,j)=>`<button class="slot-b${j===0?" sel":""}" data-j="${j}">${s[0]}:00<em>−${s[1]}%</em></button>`).join("");
+}
+$("vDays").addEventListener("click",e=>{const b=e.target.closest(".day-chip");if(!b)return;hap();
+ mDay=+b.dataset.off;document.querySelectorAll("#vDays .day-chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");
+ renderVenueSlots(V[vIdx]);setMB();});
+document.addEventListener("click",e=>{const b=e.target.closest("#vSlots .slot-b");if(!b)return;hap();
+ slotIdx=+b.dataset.j;document.querySelectorAll("#vSlots .slot-b").forEach(x=>x.classList.remove("sel"));b.classList.add("sel");setMB();});
+function setMB(){const v=V[vIdx],sl=slotsFor(v,mDay);if(!sl.length){$("mainBtn").textContent="Нет часов в этот день";return;}
+ const s=sl[slotIdx]||sl[0];$("mainBtn").textContent=`Забронировать ${dayLabel(mDay)}, ${s[0]}:00 · ${DEP} ₽`;}
+
+/* ---------- MainButton → оплата ---------- */
+$("mainBtn").onclick=()=>{hap();
+ if(screen==="venue"){const v=V[vIdx],sl=slotsFor(v,mDay);if(!sl.length)return;const s=sl[slotIdx]||sl[0];
+   $("payTitle").textContent=`Депозит за бронь · ${DEP} ₽`;$("psPay").textContent=`Оплатить ${DEP} ₽`;
+   $("paySub").textContent=`${v.name} · ${dayLabel(mDay).toLowerCase()}, ${s[0]}:00 · скидка ${s[1]}% на весь счёт`;
+   $("pay").classList.add("open");}
+ else if(screen==="ok"){tab="bk";document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("sel",x.dataset.t==="bk"));go("bk");}};
+
+/* ---------- баллы/оплата ---------- */
+function refreshPts(){$("ptsBal").textContent=PTS;const left=Math.max(0,DEP-PTS);
+ $("ptsGoal").textContent=left>0?`ещё ${left} до бесплатной брони`:"доступна бесплатная бронь!";
+ $("ptsBar").style.width=Math.min(100,Math.round(PTS/DEP*100))+"%";
+ $("payPtsTxt").textContent=left>0?`Баллами · нужно ${DEP}, у вас ${PTS}`:`Баллами · спишется ${DEP}`;
+ $("payPts").classList.toggle("lock",left>0);
+ $("visGoal").textContent=VIS>=6?"статус «Свой» ★":`${VIS} / 6 до «Свой»`;}
+document.querySelectorAll(".pay-m").forEach(m=>m.onclick=()=>{hap();document.querySelectorAll(".pay-m").forEach(x=>x.classList.remove("sel"));m.classList.add("sel");});
+$("pay").addEventListener("click",e=>{if(e.target.id==="pay")e.target.classList.remove("open");});
+$("psPay").onclick=async()=>{hap();const btn=$("psPay"),byPts=$("payPts").classList.contains("sel");
+ btn.textContent=byPts?"Списываем баллы…":"Оформляем бронь…";btn.disabled=true;
+ const v=V[vIdx],sl=slotsFor(v,mDay),s=sl[slotIdx]||sl[0];
+ try{
+   const res=await api("/bookings",{method:"POST",body:JSON.stringify(
+     {venue_id:v.id,hour:s[0],date:isoDate(mDay),pay_with_points:byPts})});
+   PTS=res.points;VIS+=1;refreshPts();
+   booking={v,s,day:mDay,code:res.code,id:res.id};
+   $("okSub").textContent=`${v.name} · ${dayLabel(mDay).toLowerCase()}, ${s[0]}:00 · −${s[1]}%`;
+   $("okCode").textContent=res.code;
+   const d=dateFor(mDay);const dstr=String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0");
+   $("okDetails").innerHTML=`
+    <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#${IC[v.cat]}"/></svg><div><b>${v.name}</b><small>${v.place} · ${DN[v.d]}</small></div></div>
+    <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-clock"/></svg><div>${dayLabel(mDay)} (${dstr}), ${s[0]}:00–${s[0]+1}:00<small>приходите в течение окна</small></div></div>
+    <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-ticket"/></svg><div>Скидка −${s[1]}% на весь счёт<small>депозит ${DEP} ₽ ${byPts?"оплачен баллами":"зачтён"}</small></div></div>`;
+   await loadBookings();
+   await loadAvailability();dayRow();distRow();feed();
+   $("pay").classList.remove("open");renderUp();go("ok");
+   if(tg){try{tg.HapticFeedback.notificationOccurred("success")}catch(e){}}
+ }catch(e){
+   // Место могли занять, пока гость выбирал: показываем причину и обновляем ленту
+   toast(e.message||"Не удалось забронировать");
+   await loadAvailability();dayRow();distRow();feed();
+   if(tg){try{tg.HapticFeedback.notificationOccurred("error")}catch(_){}}
+ }finally{btn.textContent=`Оплатить ${DEP} ₽`;btn.disabled=false;}
+};
+
+/* ---------- брони ---------- */
+function bkLine(b){
+  const d=b.date.split("-");const dstr=d[2]+"."+d[1];
+  const icon=IC[b.venue.cat]||"ic-food";
+  return `<div class="bk-card"><div class="bk-top">
+    <div class="bk-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#${icon}"/></svg></div>
+    <div><div class="bk-name">${b.venue.name}</div>
+    <div class="bk-when">${dstr} · ${b.hour}:00 · −${b.discount}% · ${b.code}</div></div>
+    <div class="bk-eta">${b.status==="cancelled"?"отменена":(b.status==="visited"?"посещено":"активна")}</div></div>
+    ${b.status==="active"&&b.upcoming?`<div class="bk-save"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-ticket"/></svg>Код называете на месте · <a href="#" data-cancel="${b.id}" style="color:inherit;text-decoration:underline">отменить</a></div>`:""}
+  </div>`;
+}
+function renderUp(){
+  const box=$("bkUp");
+  const up=MYBOOKINGS.filter(b=>b.upcoming);
+  if(!LOADED){box.innerHTML=`<div class="empty">Загружаем ваши брони…</div>`;return;}
+  if(!up.length){box.innerHTML=`<div class="empty">Пока нет активных броней — выберите тихое окно в ленте</div>`;return;}
+  box.innerHTML=up.map(bkLine).join("");
+  box.querySelectorAll("[data-cancel]").forEach(a=>a.onclick=async e=>{
+    e.preventDefault();hap();
+    try{
+      await api("/bookings/cancel",{method:"POST",body:JSON.stringify({booking_id:+a.dataset.cancel})});
+      toast("Бронь отменена");
+      await loadBookings();await loadAvailability();dayRow();distRow();feed();renderUp();
+    }catch(err){toast(err.message||"Не удалось отменить");}
+  });
+}
+
+/* ---------- загрузка данных ---------- */
+async function loadVenues(){
+  const d=await api("/venues");
+  V=d.venues;LOADED=true;
+}
+async function loadAvailability(){
+  try{const d=await api("/availability?date="+isoDate(dayOff));AVAIL=d.left||{};}
+  catch(e){AVAIL={};}
+}
+async function loadBookings(){
+  try{const d=await api("/bookings");MYBOOKINGS=d.bookings||[];PTS=d.points;VIS=d.visits;refreshPts();}
+  catch(e){MYBOOKINGS=[];}
+}
+async function reload(){
+  await loadAvailability();dayRow();distRow();feed();
+}
+
+document.querySelectorAll(".tgl").forEach(t=>t.onclick=()=>{hap();t.classList.toggle("off");});
+$("inviteBtn").onclick=()=>{hap();toast("Ссылка-приглашение скопирована");};
+$("remindBtn").onclick=()=>{hap();toast("Напомним за 2 часа до визита");};
+let tt;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2200);}
+
+/* ---------- init ---------- */
+clock();refreshPts();renderUp();
+$("feedList").innerHTML='<div class="empty">Загружаем тихие окна…</div>';
+
+(async()=>{
+  try{
+    try{
+      await Promise.all([loadVenues(), loadAvailability()]);
+    }catch(e1){
+      // Повторяем только мгновенный обрыв: он часто разовый. После таймаута
+      // ждать второй раз бессмысленно — гость смотрит в пустой экран вдвое дольше.
+      if(String(e1 && e1.message).indexOf("вовремя")>=0) throw e1;
+      $("feedList").innerHTML='<div class="empty">Связь нестабильна, пробуем ещё раз…</div>';
+      await new Promise(r=>setTimeout(r,1200));
+      await Promise.all([loadVenues(), loadAvailability()]);
+    }
+    dayRow();distRow();feed();
+    // Если на сегодня окон уже нет (вечер), открываем ближайший день, где они
+    // есть, вместо пустого экрана с надписью «здесь пусто».
+    if(countFor(0)===0){
+      for(let off=1;off<7;off++){
+        if(countFor(off)>0){
+          dayOff=off; dayRow();distRow();feed();
+          await loadAvailability(); dayRow();distRow();feed();
+          break;
+        }
+      }
+    }
+    loadBookings().then(renderUp).catch(()=>{});
+  }catch(e){
+    LOADED=true; LOAD_ERR=true;
+    showLoadError(e && e.message);
+    renderUp();
+  }
+})();
+
+setInterval(()=>{clock();},30000);
+setInterval(async()=>{if(LOADED&&screen==="feed"){await loadAvailability();dayRow();distRow();feed();}},60000);
+</script>
+</body>
+</html>

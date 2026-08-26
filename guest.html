@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Личный кабинет — Тихий Час</title>
+<meta name="robots" content="noindex">
+<style>
+:root{
+  --espresso:#191410;--oat:#F4EFE6;--honey:#DFA63C;--honey-d:#B9822A;
+  --ink:#20180F;--ink-soft:#6E6456;--cream-soft:#DBD2C1;--cream-dim:#A99E8B;
+  --line-lt:#E7DECB;--ok:#2E9E6B;--err:#C2542F;
+  --disp:'New York','Iowan Old Style',Georgia,'Times New Roman',serif;
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,'Segoe UI','Roboto',sans-serif;
+  --mono:ui-monospace,'SF Mono','Menlo',monospace;
+  color-scheme:light only;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;flex:none}
+body{font-family:var(--sans)}
+</style>
+<link rel="stylesheet" href="/cabinet.css?v=3">
+<style>
+.hero{background:#fff;border:1px solid var(--line-lt);border-radius:18px;
+  padding:22px 24px;margin-bottom:20px;max-width:680px;
+  display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+.hero h1{font-family:var(--disp);font-size:23px;margin-bottom:4px;font-weight:700}
+.hero .sub{font-size:13.5px;color:var(--ink-soft)}
+.pts{text-align:right}
+.pts b{display:block;font-size:30px;font-family:var(--disp);color:var(--honey-d);line-height:1}
+.pts span{font-size:12px;color:var(--ink-soft)}
+.gtabs{display:flex;gap:7px;margin-bottom:18px;background:#EBE3D5;
+  border-radius:11px;padding:3px;max-width:330px}
+.gtab{flex:1;padding:9px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--ink-soft)}
+.gtab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07)}
+</style>
+<style>
+.bkc{background:#fff;border:1px solid var(--line-lt);border-radius:15px;
+  padding:16px 18px;margin-bottom:11px;max-width:680px}
+.bkc-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.bkc-hd b{font-family:var(--disp);font-size:16.5px}
+.bkc-m{font-size:12.5px;color:var(--ink-soft);margin-top:3px}
+.bkc-code{font-family:var(--mono);font-size:13px;background:#F4EFE6;
+  padding:4px 9px;border-radius:7px;display:inline-block;margin-top:10px;letter-spacing:.4px}
+.st{font-size:10.5px;padding:4px 9px;border-radius:7px;font-weight:700;flex:none;white-space:nowrap}
+.st.active{background:#E4F3EB;color:var(--ok)}
+.st.visited{background:#EDE7F6;color:#6A4FA0}
+.st.cancelled{background:#F7E8E2;color:var(--err)}
+.xbtn{margin-top:12px;border:1.5px solid var(--err);color:var(--err);background:#fff;
+  border-radius:9px;padding:8px 15px;font-size:12.5px}
+</style>
+<style>
+.card{background:#fff;border:1px solid var(--line-lt);border-radius:16px;
+  padding:22px 24px;max-width:680px}
+.fld{margin-bottom:15px}
+.fld label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px}
+.fld input{width:100%;padding:11px 13px;border:1.5px solid var(--line-lt);
+  border-radius:10px;font-size:14.5px;font-family:var(--sans);background:#fff;color:var(--ink)}
+.fld input:focus{outline:none;border-color:var(--honey)}
+.fld input[readonly]{background:#F7F3EC;color:var(--ink-soft)}
+.save{background:var(--honey);color:#fff;border-radius:10px;padding:12px 22px;
+  font-size:14px;font-weight:700}
+.msg{font-size:13px;margin-top:11px;min-height:1px}
+.msg.ok{color:var(--ok)}.msg.err{color:var(--err)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--espresso);color:#fff;padding:12px 20px;border-radius:12px;
+  font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;z-index:70}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--err)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="ic-list"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></g>
+  <g id="ic-clock"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></g>
+  <g id="ic-spark"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/></g>
+  <g id="ic-user"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/></g>
+  <g id="ic-store"><path d="M4 9l1-5h14l1 5"/><path d="M5 9v9h14V9"/></g>
+</defs></svg>
+
+<div class="stage"><div class="phone"><div class="screen-wrap">
+  <div class="cs-mask" id="csMask"></div>
+  <aside class="cab-side">
+    <a class="cs-logo" href="/">Тихий <span>Час</span></a>
+    <nav class="cs-nav" id="gMenu">
+      <button class="cs-item on" data-t="up">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-list"/></svg>Мои брони</button>
+      <button class="cs-item" data-t="past">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-clock"/></svg>История</button>
+      <button class="cs-item" data-t="bonus">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-spark"/></svg>Бонусы</button>
+      <button class="cs-item" data-t="prof">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-user"/></svg>Профиль</button>
+    </nav>
+    <div class="cs-foot">
+      <div class="cs-who" id="gWho">
+        <div class="cs-av" id="gAv">?</div>
+        <div class="cs-me"><b id="gName">Гость</b><span id="gPts">0 баллов</span></div>
+        <svg class="ic cs-chev" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+      <button class="cs-exit" id="gExit">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M9 5H5v14h4M15 8l4 4-4 4M19 12H9"/></svg>Выйти</button>
+    </div>
+  </aside>
+  <div class="cab-main">
+    <div class="cab-topbar">
+      <button class="cs-burger" id="gBurger">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+    <div class="app" id="app">
+      <div id="loading" style="padding:60px 0;color:var(--ink-soft);font-family:var(--disp);font-style:italic">Загружаем кабинет…</div>
+      <div id="body" style="display:none">
+        <div class="hero">
+          <div><h1 id="hi">Личный кабинет</h1><div class="sub" id="visits"></div></div>
+          <div class="pts"><b id="ptsBig">0</b><span>баллов</span></div>
+        </div>
+        <div class="gtabs">
+          <button class="gtab on" data-t="up">Активные</button>
+          <button class="gtab" data-t="past">История</button>
+          <button class="gtab" data-t="bonus">Бонусы</button>
+          <button class="gtab" data-t="prof">Профиль</button>
+        </div>
+        <div id="scrUp"></div>
+        <div id="scrPast" style="display:none"></div>
+        <div id="scrBonus" style="display:none"></div>
+        <div id="scrProf" style="display:none">
+          <div class="card">
+            <div class="fld"><label>E-mail</label><input id="pEmail" readonly></div>
+            <div class="fld"><label>Имя</label><input id="pName" maxlength="120"></div>
+            <div class="fld"><label>Телефон — по нему заведение свяжется с вами</label>
+              <input id="pPhone" type="tel" maxlength="32" placeholder="+7 900 000-00-00"></div>
+            <button class="save" id="pSave">Сохранить</button>
+            <div class="msg" id="pMsg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+function csToggle(v){
+  const sd=document.querySelector(".cab-side"), mk=document.getElementById("csMask");
+  const on = v===undefined ? !sd.classList.contains("open") : v;
+  sd.classList.toggle("open",on); if(mk) mk.classList.toggle("on",on);
+}
+document.addEventListener("click",e=>{if(e.target.id==="csMask")csToggle(false);});
+const ST={active:"Активна",cancelled:"Отменена",visited:"Визит подтверждён"};
+let DATA=null, tab="up";
+
+async function api(p,o={}){
+  const r=await fetch(p,{...o,credentials:"same-origin",
+    headers:{"Content-Type":"application/json",...(o.headers||{})}});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw Object.assign(new Error(d.detail||`Ошибка (${r.status})`),{status:r.status});
+  return d;
+}
+function toast(m,e){const t=$("toast");t.textContent=m;
+  t.className="toast show"+(e?" err":"");setTimeout(()=>t.classList.remove("show"),2600);}
+function plural(n,a,b,c){const m=n%10,h=n%100;
+  return n+" "+(m===1&&h!==11?a:(m>=2&&m<=4&&(h<10||h>=20)?b:c));}
+function fmt(iso){return new Date(iso+"T00:00:00")
+  .toLocaleDateString("ru-RU",{day:"numeric",month:"long"});}
+function card(b){
+  return `<div class="bkc"><div class="bkc-hd"><div>
+      <b>${b.venue.name}</b>
+      <div class="bkc-m">${b.venue.place||""} · ${b.venue.district_name}</div>
+      <div class="bkc-m">${fmt(b.date)}, ${b.hour}:00 — скидка −${b.discount}%</div>
+      <div class="bkc-code">${b.code}</div>
+    </div><span class="st ${b.status}">${ST[b.status]||b.status}</span></div>
+    ${b.status==="active"&&b.upcoming?`<button class="xbtn" data-id="${b.id}">Отменить бронь</button>`:""}
+  </div>`;
+}
+function empty(t,s,btn){
+  return `<div class="cab-empty">
+    <div class="ce-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-store"/></svg></div>
+    <b>${t}</b><span>${s}</span>
+    ${btn?`<a class="save" style="display:inline-block;margin-top:20px;text-decoration:none" href="/">Выбрать заведение</a>`:""}
+  </div>`;
+}
+function render(){
+  const n=DATA.name||"Гость";
+  $("hi").textContent=`Здравствуйте, ${n}!`;
+  $("ptsBig").textContent=DATA.points;
+  $("gName").textContent=n;
+  $("gAv").textContent=n.trim()[0].toUpperCase();
+  $("gPts").textContent=plural(DATA.points,"балл","балла","баллов");
+  $("visits").textContent=DATA.visits
+    ? `${plural(DATA.visits,"визит","визита","визитов")} по тихим часам`
+    : "Пока ни одного визита — самое время забронировать";
+  const up=DATA.bookings.filter(b=>b.upcoming);
+  const past=DATA.bookings.filter(b=>!b.upcoming);
+  $("scrUp").innerHTML = up.length ? up.map(card).join("")
+    : empty("Активных броней нет","Загляните в ленту — там заведения со скидками в тихие часы",1);
+  $("scrPast").innerHTML = past.length ? past.map(card).join("")
+    : empty("История пуста","Здесь появятся ваши прошедшие визиты",0);
+  $("pEmail").value=DATA.email||"";
+  $("pName").value=n;
+  $("pPhone").value=DATA.phone||"";
+}
+let LOY=null;
+async function loadLoyalty(){
+  if(LOY){ renderLoyalty(); return; }
+  try{ LOY=await api("/api/auth/loyalty"); renderLoyalty(); }
+  catch(e){ $("scrBonus").innerHTML='<div class="cab-empty"><b>Не удалось загрузить</b><span>Обновите страницу</span></div>'; }
+}
+function renderLoyalty(){
+  const L=LOY, pct=Math.min(100, Math.round(L.points/L.deposit*100));
+  const goal = L.free_left
+    ? `ещё <b>${L.free_left}</b> до бесплатной брони`
+    : "доступна <b>бесплатная бронь</b>";
+  $("scrBonus").innerHTML=`
+    <div class="bn-hero">
+      <div class="bn-cap">Тихие баллы</div>
+      <div class="bn-big">${L.points}</div>
+      <div class="bn-goal">${goal}</div>
+      <div class="bn-bar"><i style="width:${pct}%"></i></div>
+    </div>
+    <div class="bn-ref">
+      <b>Пригласите друга — по ${L.ref_bonus} баллов обоим</b>
+      <p>Друг регистрируется по вашей ссылке, и вы оба сразу получаете по ${L.ref_bonus} баллов.
+      ${L.invited ? `Уже пришли по вашей ссылке: <b>${L.invited}</b>.` : ""}</p>
+      <button class="save" id="bnCopy">Скопировать ссылку</button>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="bn-row"><span class="l">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-spark"/></svg>Статус: ${L.status}</span>
+        <span class="r">${L.have} / ${L.need} визитов до «Свой»</span></div>
+      <div class="bn-row"><span class="l">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-clock"/></svg>За визит</span>
+        <span class="r">+${L.pts_visit} баллов</span></div>
+      <div class="bn-row"><span class="l">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-list"/></svg>За бронь</span>
+        <span class="r">+20 баллов</span></div>
+      <div class="bn-row"><span class="l">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-store"/></svg>${L.deposit} баллов</span>
+        <span class="r">депозит в подарок</span></div>
+    </div>
+    ${L.history.length ? `<div class="card"><div class="bn-cap" style="color:var(--ink-soft);margin-bottom:6px">История начислений</div>
+      ${L.history.map(h=>`<div class="bn-hist"><span>${h.reason}<br><span style="color:var(--ink-soft);font-size:12px">${h.date}</span></span>
+      <span class="${h.delta>0?"bn-plus":"bn-minus"}">${h.delta>0?"+":""}${h.delta}</span></div>`).join("")}</div>` : ""}`;
+  const cb=$("bnCopy");
+  if(cb) cb.onclick=()=>{
+    navigator.clipboard.writeText(L.ref_link)
+      .then(()=>toast("Ссылка скопирована"))
+      .catch(()=>toast(L.ref_link));
+  };
+}
+
+function show(t){
+  tab=t;
+  $("scrUp").style.display   = t==="up"   ? "block":"none";
+  $("scrPast").style.display = t==="past" ? "block":"none";
+  $("scrProf").style.display = t==="prof" ? "block":"none";
+  $("scrBonus").style.display = t==="bonus" ? "block":"none";
+  if(t==="bonus") loadLoyalty();
+  document.querySelectorAll(".cs-item").forEach(x=>x.classList.toggle("on",x.dataset.t===t));
+  document.querySelectorAll(".gtab").forEach(x=>x.classList.toggle("on",x.dataset.t===t));
+  csToggle(false);
+}
+$("gMenu").addEventListener("click",e=>{
+  const x=e.target.closest(".cs-item"); if(x) show(x.dataset.t);});
+document.querySelector(".gtabs").addEventListener("click",e=>{
+  const x=e.target.closest(".gtab"); if(x) show(x.dataset.t);});
+$("gWho").onclick=()=>show("prof");
+$("gBurger").onclick=()=>csToggle();
+document.addEventListener("click",async e=>{
+  const b=e.target.closest(".xbtn"); if(!b)return;
+  b.disabled=true;
+  try{
+    await api("/api/guest/bookings/cancel",{method:"POST",
+      body:JSON.stringify({booking_id:+b.dataset.id})});
+    toast("Бронь отменена"); await load();
+  }catch(err){ toast(err.message,true); b.disabled=false; }
+});
+$("pSave").onclick=async()=>{
+  const m=$("pMsg"); m.textContent=""; m.className="msg";
+  try{
+    await api("/api/auth/profile",{method:"PATCH",
+      body:JSON.stringify({name:$("pName").value.trim(),phone:$("pPhone").value.trim()})});
+    m.textContent="Сохранено"; m.className="msg ok"; await load();
+  }catch(err){ m.textContent=err.message; m.className="msg err"; }
+};
+$("gExit").onclick=async()=>{
+  try{ await api("/api/auth/logout",{method:"POST"}); }catch(e){}
+  location.href="/";
+};
+async function load(){
+  const [bk,me]=await Promise.all([api("/api/guest/bookings"),api("/api/auth/me")]);
+  DATA={...bk, email:me.user.email, phone:me.user.phone};
+  render(); show(tab);
+}
+(async()=>{
+  try{
+    await load();
+    $("loading").style.display="none"; $("body").style.display="block";
+  }catch(e){
+    if(e.status===401){ location.href="/login.html"; return; }
+    $("loading").textContent="Не удалось загрузить кабинет. Обновите страницу.";
+  }
+})();
+</script>
+</body>
+</html>
