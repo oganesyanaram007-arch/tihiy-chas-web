@@ -1,0 +1,22 @@
+name: Deploy frontend
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /var/www/tihiy-chas
+            git fetch origin main
+            git reset --hard origin/main
+            nginx -t && systemctl reload nginx
+            echo "Frontend deployed"
