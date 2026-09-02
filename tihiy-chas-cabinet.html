@@ -189,6 +189,16 @@ input[type=file]{display:none}
 .prof-msg.ok{color:var(--ok)}
 .prof-msg.err{color:var(--err)}
 
+/* ---- действия над заведением ---- */
+.st-acts{max-width:680px;margin:0 0 14px;display:flex;gap:10px;flex-wrap:wrap}
+.st-act{flex:1 1 200px;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 18px;border-radius:12px;font-size:14px;font-weight:600;
+  background:var(--espresso);color:#FBF7EF}
+.st-act.ghost{background:var(--porcelain);border:1.5px solid var(--line-lt);color:var(--ink)}
+.st-act:active{transform:scale(.99)}
+.photo-slot .x.locked{background:rgba(25,18,14,.35)}
+.photo-note{max-width:680px;margin:0 18px 14px;font-size:12px;color:var(--ink-soft);line-height:1.5}
+
 .tabbar{position:absolute;left:0;right:0;bottom:0;height:76px;background:var(--espresso);border-top:1px solid var(--line-dk);display:flex;padding:8px 6px 20px;border-radius:0 0 44px 44px}
 @media(max-width:430px){.tabbar{border-radius:0}}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--mono);font-size:9px;font-weight:700;color:var(--cream-dim)}
@@ -364,6 +374,7 @@ input[type=file]{display:none}
           <div class="wz-bar"><i class="done"></i><i class="done"></i><i></i><i></i></div>
         </div>
         <div class="photos" id="photoGrid"></div>
+        <div class="photo-note" id="photoNote" style="display:none"></div>
         <div class="fld-err" id="err2">Добавьте хотя бы одно фото</div>
       </section>
 
@@ -627,8 +638,12 @@ function go(s){
   if(s==="step1"){$("wzNext").textContent="Далее";}
   if(s==="step4"){$("wzNext").innerHTML="Отправить на модерацию";}
   else if(s==="step2"||s==="step3"){$("wzNext").textContent="Далее";}
+  /* Правка уже заведённой карточки: каждый шаг самодостаточен — сохранили и вышли,
+     а не гоним владельца через все четыре экрана ради одной скидки. */
+  if(W.editing && ["step1","step2","step3"].includes(s)) $("wzNext").textContent="Сохранить";
 }
 $("tgLeft").onclick=()=>{hap();
+  if(W.editing){ const id=W.id; W.editing=false; openStatus(id).catch(()=>go("list")); return; }
   if(["step1","step2","step3","step4"].includes(screen)) go("list");
   else if(screen==="status") go("list");
   else location.href="/";};
@@ -673,7 +688,17 @@ async function apiSoft(path){
 function applyMe(m){
   const name=((m&&m.user&&m.user.name)||"Владелец").trim()||"Владелец";
   $("csName").textContent=name;
-  $("csOrg").textContent=(m&&m.partner&&m.partner.title)||"Заведение";
+  /* partner.title у бэкенда часто совпадает с именем владельца — в сайдбаре
+     это выглядело как «Anna / Anna». Подписываем заведением: так строка
+     несёт смысл, а не повторяет строку выше. */
+  const title=((m&&m.partner&&m.partner.title)||"").trim();
+  const vs=(typeof VENUES!=="undefined" && VENUES) ? VENUES : [];
+  let org;
+  if(title && title!==name) org=title;
+  else if(vs.length===1) org=vs[0].name;
+  else if(vs.length>1) org=vs.length+" заведения";
+  else org="Заведение";
+  $("csOrg").textContent=org;
   $("csAvatar").textContent=(name[0]||"В").toUpperCase();
   $("listGreeting").textContent=`Здравствуйте, ${name}!`;
 }
@@ -824,8 +849,11 @@ $("bkList").addEventListener("click",async e=>{
 });
 
 /* ---------- список заведений ---------- */
+let VENUES=[];
 async function refreshList(){
   const {venues} = await api("/api/cab/venues");
+  VENUES = venues || [];
+  if(typeof PROF!=="undefined" && PROF) applyMe(PROF);
   const box=$("venueList"); box.innerHTML="";
   if(!venues.length){
     box.innerHTML=`<div class="empty-wrap"><div style="text-align:center;color:var(--ink-soft);font-family:var(--disp);font-style:italic;font-size:16px">Пока нет заведений — добавьте первое</div></div>`;
@@ -845,11 +873,11 @@ $("addVenueBtn").onclick=()=>{hap();resetWizard();go("step1");};
 
 /* ---------- мастер: состояние ---------- */
 let W={id:null,name:"",cat:"food",district:"petro",address:"",phone:"",url:"",
-      photos:[],uploaded:[],weekdays:[0,1,2,3,4],slots:[{hour:12,discount:30}]};
+      photos:[],uploaded:[],weekdays:[0,1,2,3,4],slots:[{hour:12,discount:30}],editing:false};
 
 function resetWizard(){
   W={id:null,name:"",cat:"food",district:"petro",address:"",phone:"",url:"",
-    photos:[],uploaded:[],weekdays:[0,1,2,3,4],slots:[{hour:12,discount:30}]};
+    photos:[],uploaded:[],weekdays:[0,1,2,3,4],slots:[{hour:12,discount:30}],editing:false};
   $("fName").value="";$("fAddr").value="";$("fPhone").value="";$("fUrl").value="";
   $("fCat").value="food";$("fDist").value="petro";
   renderPhotos();renderWeekdays();renderSlots();
@@ -887,9 +915,20 @@ function renderPhotos(){
   W.photos.forEach((src,i)=>{
     const cell=document.createElement("div");
     cell.className="photo-slot"+(i===0?" cover":"");
-    cell.innerHTML=`<img src="${src}"><span class="x" data-i="${i}">✕</span>`;
+    /* Уже загруженный на сервер снимок убрать нельзя: у API нет удаления фото.
+       Показываем замок вместо крестика, чтобы не делать вид, что удалили. */
+    const locked = W.editing && W.uploaded.indexOf(src)>=0;
+    cell.innerHTML=`<img src="${src}"><span class="x${locked?" locked":""}" data-i="${i}">${locked?"🔒":"✕"}</span>`;
     grid.appendChild(cell);
   });
+  const note=$("photoNote");
+  if(note){
+    const lockedCount = W.editing ? W.photos.filter(x=>W.uploaded.indexOf(x)>=0).length : 0;
+    note.style.display = lockedCount ? "block" : "none";
+    note.textContent = lockedCount
+      ? "Уже опубликованные фото удалить нельзя — можно только добавить новые. Чтобы убрать снимок, напишите в поддержку."
+      : "";
+  }
   if(W.photos.length<5){
     const add=document.createElement("label");
     add.className="photo-slot photo-add";
@@ -899,6 +938,9 @@ function renderPhotos(){
 }
 $("photoGrid").addEventListener("click",e=>{
   const x=e.target.closest(".x");if(!x)return;hap();
+  if(x.classList.contains("locked")){
+    toast("Опубликованное фото удаляется через поддержку",true); return;
+  }
   W.photos.splice(+x.dataset.i,1);renderPhotos();
 });
 $("photoGrid").addEventListener("change",e=>{
@@ -957,6 +999,17 @@ $("wzNext").onclick=async ()=>{
   wzBusy=true; $("wzNext").disabled=true;
   try{ await wzStep(); } finally{ wzBusy=false; $("wzNext").disabled=false; }
 };
+/* В режиме правки каждый шаг уже записал свои данные на сервер
+   (PATCH карточки, POST фото, PUT часов), поэтому остаётся только
+   обновить список и вернуть владельца на экран заведения. */
+async function finishEdit(){
+  const id=W.id;
+  W.editing=false;
+  toast("Изменения сохранены");
+  try{ await refreshList(); }catch(e){}
+  try{ await openStatus(id); }catch(e){ go("list"); }
+}
+
 async function wzStep(){
   if(screen==="step1"){
     collectStep1();
@@ -973,6 +1026,7 @@ async function wzStep(){
         await api(`/api/cab/venues/${W.id}`,{method:"PATCH",body:JSON.stringify(
           {name:W.name,cat:W.cat,district:W.district,address:W.address,phone:W.phone,url:W.url})});
       }
+      if(W.editing) return finishEdit();
       go("step2");
     }catch(err){toast(err.message,true);}
     return;
@@ -988,6 +1042,7 @@ async function wzStep(){
         await api(`/api/cab/venues/${W.id}/photos`,{method:"POST",body:JSON.stringify({data_url:src})});
         W.uploaded.push(src);
       }
+      if(W.editing) return finishEdit();
       go("step3");
     }catch(err){toast(err.message,true);}
     return;
@@ -998,6 +1053,7 @@ async function wzStep(){
     try{
       await api(`/api/cab/venues/${W.id}/quiet-hours`,{method:"PUT",body:JSON.stringify(
         {weekdays:W.weekdays,slots:W.slots.map(s=>({hour:s.hour,discount:s.discount,capacity:4}))})});
+      if(W.editing) return finishEdit();
       renderReview();
       go("step4");
     }catch(err){toast(err.message,true);}
@@ -1014,6 +1070,7 @@ async function wzStep(){
   }
 }
 $("wzBack").onclick=()=>{hap();
+  if(W.editing){ const id=W.id; W.editing=false; openStatus(id).catch(()=>go("list")); return; }
   const order=["step1","step2","step3","step4"];
   const idx=order.indexOf(screen);
   if(idx>0) go(order[idx-1]); else go("list");
@@ -1047,7 +1104,19 @@ async function openStatus(id){
       <span>Заявка ещё не отправлена. Проверьте данные и отправьте на модерацию.</span>
       <button id="continueEditBtn" style="margin-top:14px;width:100%;padding:12px;border:none;border-radius:12px;background:var(--espresso);color:#fff;font-weight:600;font-size:14px;cursor:pointer">Продолжить оформление</button></div>`;
   }
-  body.innerHTML=card+`
+  /* Опубликованное и отправленное на модерацию заведение тоже должно
+     редактироваться — часы и скидки меняются чаще всего, поэтому у них
+     отдельная кнопка, ведущая сразу на нужный шаг. */
+  const acts = v.status==="draft" ? "" : `
+    <div class="st-acts">
+      <button class="st-act" id="editHoursBtn">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-clock"/></svg>Часы и скидки</button>
+      <button class="st-act ghost" id="editCardBtn">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-store"/></svg>Карточка</button>
+      <button class="st-act ghost" id="editPhotosBtn">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#ic-camera"/></svg>Фото</button>
+    </div>`;
+  body.innerHTML=card+acts+`
     <div class="review-card">
       <b>${v.name}</b>
       <div class="review-line"><span>Адрес</span><b>${v.address||"—"}</b></div>
@@ -1057,13 +1126,19 @@ async function openStatus(id){
     </div>`;
   const cbtn=$("continueEditBtn");
   if(cbtn) cbtn.onclick=()=>{hap();resumeDraft(v);};
+  const hb=$("editHoursBtn"), cb=$("editCardBtn");
+  if(hb) hb.onclick=()=>{hap();resumeDraft(v,"step3",true);};
+  if(cb) cb.onclick=()=>{hap();resumeDraft(v,"step1",true);};
+  const pb=$("editPhotosBtn");
+  if(pb) pb.onclick=()=>{hap();resumeDraft(v,"step2",true);};
   go("status");
 }
 
 /* Возврат в мастер на уже начатом заведении: подтягиваем сохранённые
    данные обратно в состояние W, чтобы «Далее» продолжало с того же места,
    а не заставляло заводить заведение заново. */
-function resumeDraft(v){
+function resumeDraft(v, step, editing){
+  W.editing = !!editing;
   W.id=v.id; W.name=v.name||""; W.cat=v.cat||"food"; W.district=v.district||"petro";
   W.address=v.address||""; W.phone=v.phone||""; W.url=v.url||"";
   W.photos=(v.photos||[]).map(p=>typeof p==="string"?p:p.url);
@@ -1079,7 +1154,7 @@ function resumeDraft(v){
   $("fPhone").value=W.phone; $("fUrl").value=W.url;
   $("fCat").value=W.cat; $("fDist").value=W.district;
   renderPhotos(); renderWeekdays(); renderSlots();
-  go("step1");
+  go(step||"step1");
 }
 
 /* ---------- toast ---------- */

@@ -295,6 +295,12 @@ nav{position:sticky;top:0;z-index:80;transition:transform .28s cubic-bezier(.19,
 /* art cover */
 .cover{position:relative;height:132px;overflow:hidden;isolation:isolate}
 .cover .art{position:absolute;inset:0;transition:transform .7s cubic-bezier(.19,1,.22,1)}
+/* Фото заведения из кабинета. Лежит поверх абстрактного арта: если снимок
+   не загрузился, он удаляется и арт остаётся как запасная обложка. */
+.cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
+  transition:transform .7s cubic-bezier(.19,1,.22,1)}
+.card:hover .cover-img{transform:scale(1.07)}
+.sh-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
 .card:hover .cover .art{transform:scale(1.07)}
 .cover::after{content:"";position:absolute;inset:0;z-index:2;opacity:.5;mix-blend-mode:overlay;
  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
@@ -1273,6 +1279,38 @@ function districts(){
 }
 
 /* ---- feed ---- */
+/* ---- данные заведения из API ---- */
+/* Фото приходит из кабинета партнёра. Имя поля зависит от версии бэкенда —
+   берём первое непустое, чтобы лента заработала сразу, как только сервер
+   начнёт отдавать снимок. */
+function venuePhoto(v){
+  const p = v.photo || v.cover || v.image || v.cover_url || v.photo_url ||
+            (Array.isArray(v.photos) && v.photos.length ? v.photos[0] : null);
+  if(!p) return "";
+  const u = typeof p === "string" ? p : (p.url || p.src || "");
+  return typeof u === "string" ? u : "";
+}
+/* У заведений из кабинета place уже содержит район ("… · Калининский 1"),
+   и приписывать его второй раз нельзя — получалось "Калининский 1 · Калининский". */
+function photoTag(v){
+  const u = venuePhoto(v);
+  return u ? `<img class="cover-img" src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : "";
+}
+function venueMeta(v){
+  const dn = DN[v.d] || "", pl = (v.place || "").trim();
+  if(!pl) return dn;
+  return (dn && !pl.includes(dn)) ? pl + " \u00b7 " + dn : pl;
+}
+/* rate у реальных заведений пустой — звезда без числа выглядела браком.
+   Звёздочку рисуем только у настоящей оценки, всё прочее (например средний
+   чек) показываем текстом как есть. */
+function rateHtml(v){
+  const r = (v.rate == null ? "" : String(v.rate)).trim();
+  if(!r) return "";
+  const isScore = /^[0-9]+([.,][0-9]+)?$/.test(r);
+  return `<span class="rate">${isScore ? "\u2605 " + r : r}</span>`;
+}
+
 function feed(){
   const g=$("grid");g.innerHTML="";let n=0;
   V.forEach((v,i)=>{
@@ -1287,14 +1325,14 @@ function feed(){
     el.className="card";
     el.innerHTML=`
       <div class="cover">
-        <div class="art art-${v.cat}"></div><div class="rings"></div>
+        <div class="art art-${v.cat}"></div>${photoTag(v)}<div class="rings"></div>
         <span class="cover-off">−${best}%</span>
         <span class="cover-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#${ICO[v.cat]}"/></svg></span>
         <span class="cover-cat">${CAT[v.cat]}</span>
       </div>
       <div class="card-b">
-        <div class="card-t"><b>${v.name}</b><span class="rate">★ ${v.rate}</span></div>
-        <div class="card-m"><svg class="ic" viewBox="0 0 24 24"><use href="#i-pin"/></svg>${v.place} · ${DN[v.d]}</div>
+        <div class="card-t"><b>${v.name}</b>${rateHtml(v)}</div>
+        <div class="card-m"><svg class="ic" viewBox="0 0 24 24"><use href="#i-pin"/></svg>${venueMeta(v)}</div>
         <div class="slots">${daySlots.map(s=>`<span class="slot">${s[0]}:00 · <em>−${s[1]}%</em></span>`).join("")}</div>
         <div class="card-f"><span class="left"><i></i>${v.left}</span><span class="go">Забронировать <svg class="ic" viewBox="0 0 24 24"><use href="#i-arrow"/></svg></span></div>
       </div>`;
@@ -1348,9 +1386,21 @@ function renderSheetSlots(v){
 function open_(i){
   vIdx=i; mDay=dayOffset; const v=V[i];
   $("shCover").className="sh-cover art-"+v.cat;
+  /* Снимок заведения поверх арта; кнопка закрытия остаётся выше по DOM. */
+  (function(){
+    const c=$("shCover"), prev=c.querySelector(".sh-cover-img");
+    if(prev) prev.remove();
+    const u=venuePhoto(v);
+    if(u){
+      const im=document.createElement("img");
+      im.className="sh-cover-img"; im.alt=""; im.decoding="async"; im.loading="lazy";
+      im.onerror=()=>im.remove(); im.src=u;
+      c.insertBefore(im, c.firstChild);
+    }
+  })();
   $("shCat").textContent=CAT[v.cat];
   $("shName").textContent=v.name;
-  $("shPlace").textContent=v.place+" · "+DN[v.d]+" район · "+v.left;
+  $("shPlace").textContent=venueMeta(v)+(v.left?" · "+v.left:"");
   renderSheetDays(v);
   renderSheetSlots(v);
   $("shForm").style.display="block";$("shOk").style.display="none";
