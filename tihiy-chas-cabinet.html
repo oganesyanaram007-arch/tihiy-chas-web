@@ -196,7 +196,6 @@ input[type=file]{display:none}
   background:var(--espresso);color:#FBF7EF}
 .st-act.ghost{background:var(--porcelain);border:1.5px solid var(--line-lt);color:var(--ink)}
 .st-act:active{transform:scale(.99)}
-.photo-slot .x.locked{background:rgba(25,18,14,.35)}
 .photo-note{max-width:680px;margin:0 18px 14px;font-size:12px;color:var(--ink-soft);line-height:1.5}
 
 .tabbar{position:absolute;left:0;right:0;bottom:0;height:76px;background:var(--espresso);border-top:1px solid var(--line-dk);display:flex;padding:8px 6px 20px;border-radius:0 0 44px 44px}
@@ -667,9 +666,11 @@ $("cabMenu").addEventListener("click",e=>{
 });
 
 /* ---------- профиль владельца ---------- */
-/* Читаем из двух мест: /api/cab/me знает про заведение, /api/auth/me — про
-   почту и телефон учётной записи. Пишем через /api/auth/profile — тот же
-   эндпоинт, которым сохраняет профиль гостевой кабинет. */
+/* Читаем и пишем через кабинетное API. /api/auth/* здесь не годится: оно
+   знает только куку сайта, а в кабинет пускают ещё по подписи Telegram и по
+   куке бота — партнёр из Telegram получал бы 401 и вылетал на вход.
+   /api/auth/me остаётся мягким дополнением: если бэкенд ещё старый и не
+   отдаёт почту в /api/cab/me, она подтянется оттуда. */
 let PROF=null, profLoaded=false, profSnap="", profBusy=false;
 
 /* «Мягкий» запрос: 401 здесь не повод выкидывать из кабинета — в Telegram
@@ -771,7 +772,7 @@ $("pfSave").onclick=async()=>{
   }
   profBusy=true; $("pfSave").disabled=true; $("pfSave").textContent="Сохраняем…";
   try{
-    await api("/api/auth/profile",{method:"PATCH",body:JSON.stringify({name,phone})});
+    await api("/api/cab/profile",{method:"PATCH",body:JSON.stringify({name,phone})});
     PROF={...PROF, user:{...((PROF&&PROF.user)||{}), name, phone}};
     applyMe(PROF);
     profBusy=false;
@@ -873,11 +874,11 @@ $("addVenueBtn").onclick=()=>{hap();resetWizard();go("step1");};
 
 /* ---------- мастер: состояние ---------- */
 let W={id:null,name:"",cat:"food",district:"petro",address:"",phone:"",url:"",
-      photos:[],uploaded:[],weekdays:[0,1,2,3,4],slots:[{hour:12,discount:30}],editing:false};
+      photos:[],uploaded:[],photoIds:{},weekdays:[0,1,2,3,4],slots:[{hour:12,discount:30}],editing:false};
 
 function resetWizard(){
   W={id:null,name:"",cat:"food",district:"petro",address:"",phone:"",url:"",
-    photos:[],uploaded:[],weekdays:[0,1,2,3,4],slots:[{hour:12,discount:30}],editing:false};
+    photos:[],uploaded:[],photoIds:{},weekdays:[0,1,2,3,4],slots:[{hour:12,discount:30}],editing:false};
   $("fName").value="";$("fAddr").value="";$("fPhone").value="";$("fUrl").value="";
   $("fCat").value="food";$("fDist").value="petro";
   renderPhotos();renderWeekdays();renderSlots();
@@ -915,19 +916,18 @@ function renderPhotos(){
   W.photos.forEach((src,i)=>{
     const cell=document.createElement("div");
     cell.className="photo-slot"+(i===0?" cover":"");
-    /* Уже загруженный на сервер снимок убрать нельзя: у API нет удаления фото.
-       Показываем замок вместо крестика, чтобы не делать вид, что удалили. */
-    const locked = W.editing && W.uploaded.indexOf(src)>=0;
-    cell.innerHTML=`<img src="${src}"><span class="x${locked?" locked":""}" data-i="${i}">${locked?"🔒":"✕"}</span>`;
+    /* У снимка, уже лежащего на сервере, есть id — его крестик удаляет
+       на сервере. У только что выбранного id нет, он убирается локально. */
+    const pid = W.photoIds[src];
+    const onServer = pid!=null && W.uploaded.indexOf(src)>=0;
+    cell.innerHTML=`<img src="${src}"><span class="x" data-i="${i}"${onServer?` data-pid="${pid}"`:""}>✕</span>`;
     grid.appendChild(cell);
   });
   const note=$("photoNote");
   if(note){
-    const lockedCount = W.editing ? W.photos.filter(x=>W.uploaded.indexOf(x)>=0).length : 0;
-    note.style.display = lockedCount ? "block" : "none";
-    note.textContent = lockedCount
-      ? "Уже опубликованные фото удалить нельзя — можно только добавить новые. Чтобы убрать снимок, напишите в поддержку."
-      : "";
+    const srv = W.photos.filter(x=>W.photoIds[x]!=null && W.uploaded.indexOf(x)>=0).length;
+    note.style.display = srv ? "block" : "none";
+    note.textContent = srv ? "Первое фото — обложка в ленте. Удаление применяется сразу." : "";
   }
   if(W.photos.length<5){
     const add=document.createElement("label");
@@ -936,12 +936,21 @@ function renderPhotos(){
     grid.appendChild(add);
   }
 }
-$("photoGrid").addEventListener("click",e=>{
+$("photoGrid").addEventListener("click",async e=>{
   const x=e.target.closest(".x");if(!x)return;hap();
-  if(x.classList.contains("locked")){
-    toast("Опубликованное фото удаляется через поддержку",true); return;
-  }
-  W.photos.splice(+x.dataset.i,1);renderPhotos();
+  const i=+x.dataset.i, pid=x.dataset.pid;
+  if(pid===undefined){ W.photos.splice(i,1); renderPhotos(); return; }
+  if(!confirm("Удалить это фото? Оно сразу пропадёт с сайта.")) return;
+  const src=W.photos[i];
+  x.textContent="…";
+  try{
+    await api(`/api/cab/venues/${W.id}/photos/${pid}`,{method:"DELETE"});
+    W.photos.splice(i,1);
+    const u=W.uploaded.indexOf(src); if(u>=0) W.uploaded.splice(u,1);
+    delete W.photoIds[src];
+    renderPhotos();
+    toast("Фото удалено");
+  }catch(err){ toast(err.message,true); renderPhotos(); }
 });
 $("photoGrid").addEventListener("change",e=>{
   if(e.target.id!=="fileInput")return;
@@ -1141,8 +1150,12 @@ function resumeDraft(v, step, editing){
   W.editing = !!editing;
   W.id=v.id; W.name=v.name||""; W.cat=v.cat||"food"; W.district=v.district||"petro";
   W.address=v.address||""; W.phone=v.phone||""; W.url=v.url||"";
+  /* Сервер отдаёт снимки как {id, url}. Держим id рядом: без него
+     не вызвать DELETE, а старый формат (голые строки) тоже понимаем. */
   W.photos=(v.photos||[]).map(p=>typeof p==="string"?p:p.url);
   W.uploaded=[...W.photos];
+  W.photoIds={};
+  (v.photos||[]).forEach(p=>{ if(p && typeof p==="object" && p.url && p.id!=null) W.photoIds[p.url]=p.id; });
   const wds=new Set(), slotsMap=new Map();
   (v.quiet_windows||[]).forEach(qw=>{
     wds.add(qw.weekday);
