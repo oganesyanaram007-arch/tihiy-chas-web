@@ -56,7 +56,7 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
   display:grid;place-items:center;line-height:1}
 .tab{position:relative}
 .bk-tabs{display:flex;gap:7px;margin:0 18px 14px;background:#EBE3D5;border-radius:11px;padding:3px}
-.bk-tab{flex:1;padding:8px;border-radius:9px;font-size:13px;font-weight:600;color:var(--ink-soft);background:none}
+.bk-tab{flex:1;padding:8px;min-height:44px;border-radius:9px;font-size:13px;font-weight:600;color:var(--ink-soft);background:none}
 .bk-tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .bk-item{margin:0 18px 10px;background:#fff;border:1px solid var(--line-lt);border-radius:14px;padding:14px 16px}
 .bk-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
@@ -69,7 +69,7 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
 .bk-st.active{background:#E4F3EB;color:var(--ok)}
 .bk-st.visited{background:#EDE7F6;color:#6A4FA0}
 .bk-st.cancelled{background:#F7E8E2;color:var(--err)}
-.bk-go{margin-top:11px;width:100%;padding:10px;border-radius:10px;background:var(--espresso);
+.bk-go{margin-top:11px;width:100%;padding:10px;min-height:44px;border-radius:10px;background:var(--espresso);
   color:#fff;font-size:13.5px;font-weight:600}
 .bk-go:disabled{opacity:.5}
 
@@ -102,20 +102,25 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
 .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:0 18px 16px}
 .photo-slot{aspect-ratio:1;border-radius:13px;border:1.5px dashed var(--line-lt);background:var(--porcelain);display:grid;place-items:center;color:var(--ink-soft);position:relative;overflow:hidden}
 .photo-slot img{width:100%;height:100%;object-fit:cover}
-.photo-slot .x{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:rgba(25,18,14,.6);color:#fff;display:grid;place-items:center;font-size:11px}
+.photo-slot .x{position:absolute;top:7px;right:7px;width:30px;height:30px;border-radius:50%;background:rgba(25,18,14,.66);color:#fff;display:grid;place-items:center;font-size:15px}
+/* Палец толще курсора. Расширяем зону нажатия подложкой, но слот обрезает
+   её по своим краям (overflow:hidden), поэтому кружок стоит в 7 px от края:
+   30 + 7 + 7 = 44 px реальной зоны. Удаление необратимо — промахиваться нельзя. */
+.photo-slot .x::after{content:"";position:absolute;inset:-9px;border-radius:50%}
 .photo-slot.cover::after{content:"обложка";position:absolute;bottom:4px;left:4px;right:4px;font-family:var(--mono);font-size:8px;text-align:center;background:rgba(25,18,14,.6);color:var(--honey);border-radius:6px;padding:2px}
 .photo-add{border:none;cursor:pointer}
 input[type=file]{display:none}
 
 /* ---- тихие часы ---- */
 .wd-row{display:flex;gap:6px;margin:0 18px 18px;flex-wrap:wrap}
-.wd-chip{flex:1;min-width:38px;padding:10px 0;text-align:center;border:1.5px solid var(--line-lt);border-radius:10px;background:var(--porcelain);font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-soft)}
+.wd-chip{flex:1;min-width:38px;min-height:44px;padding:10px 0;text-align:center;border:1.5px solid var(--line-lt);border-radius:10px;background:var(--porcelain);font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-soft)}
 .wd-chip.on{background:var(--espresso);border-color:var(--espresso);color:var(--honey)}
 .slot-list{margin:0 18px 12px;display:flex;flex-direction:column;gap:9px}
-.slot-row{display:flex;gap:8px;align-items:center;background:var(--porcelain);border:1.5px solid var(--line-lt);border-radius:12px;padding:9px 11px}
-.slot-row select{flex:1;font-family:var(--mono);font-size:13px;background:none;border:none;color:var(--ink)}
-.slot-row .rm{color:var(--err);font-size:16px;padding:0 4px}
-.add-slot{margin:0 18px 16px;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border:1.5px dashed var(--line-lt);border-radius:12px;color:var(--honey-d);font-size:13px;font-weight:700}
+.slot-row{display:flex;gap:8px;align-items:center;background:var(--porcelain);border:1.5px solid var(--line-lt);border-radius:12px;padding:3px 11px}
+.slot-row select{flex:1;font-family:var(--mono);font-size:13px;background:none;border:none;color:var(--ink);
+  min-height:44px}   /* на телефоне список был высотой 17 px — не попасть */
+.slot-row .rm{color:var(--err);font-size:16px;padding:0 4px;min-height:44px;display:grid;place-items:center}
+.add-slot{margin:0 18px 16px;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;min-height:44px;border:1.5px dashed var(--line-lt);border-radius:12px;color:var(--honey-d);font-size:13px;font-weight:700}
 
 /* ---- итог/статус ---- */
 .review-card{margin:0 18px 14px;background:var(--porcelain);border:1px solid var(--line-lt);border-radius:14px;padding:14px 15px}
@@ -183,7 +188,7 @@ input[type=file]{display:none}
 .prof-err.show{display:block}
 .prof-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:4px}
 .prof-save{background:var(--espresso);color:#FBF7EF;border-radius:11px;padding:12px 24px;
-  font-size:14px;font-weight:700}
+  min-height:44px;font-size:14px;font-weight:700}
 .prof-save:disabled{opacity:.45}
 .prof-msg{font-size:13px}
 .prof-msg.ok{color:var(--ok)}
@@ -205,7 +210,7 @@ input[type=file]{display:none}
 .tab.sel{color:var(--honey)}
 
 </style>
-<link rel="stylesheet" href="/cabinet.css?v=3">
+<link rel="stylesheet" href="/cabinet.css?v=6">
 </head>
 <body>
 
