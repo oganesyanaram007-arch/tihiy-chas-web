@@ -1015,7 +1015,7 @@ body.tabs-stuck .tabs{top:0}
     <span class="eyebrow" style="justify-content:center">Громкая выгода в тихие часы</span>
     <h2>Найдите свой <em>тихий час</em> уже сегодня.</h2>
     <p class="lead">Посмотрите, что свободно рядом прямо сейчас — и займите место в пару кликов.</p>
-    <a class="btn btn-honey btn-lg" href="#feed">Смотреть тихие часы</a>
+    <a class="btn btn-honey btn-lg" href="#now">Смотреть тихие часы</a>
   </div>
 </section>
 
@@ -1236,6 +1236,18 @@ function countFor(off){
     return okD&&okC&&slotsFor(v,off).length>0;
   }).length;
 }
+/* Вечером и в выходной на сегодня окон уже не остаётся, и гость попадал
+   на пустую витрину с надписью «окон нет» — при том что на завтра свободны
+   все заведения. Открываем ближайший день, где окна есть. Работает только
+   при первом показе: если день выбрал сам гость, его выбор не трогаем. */
+let dayAutoPicked=false;
+function autoPickDay(){
+  if(dayAutoPicked || dayOffset!==0 || countFor(0)>0) return;
+  for(let off=1; off<DAYS_AHEAD; off++){
+    if(countFor(off)>0){ dayOffset=off; dayAutoPicked=true; return; }
+  }
+}
+
 /* Русское склонение: 1 место, 2 места, 5 мест */
 function plural(n,one,few,many){
   const a=Math.abs(n)%100, b=a%10;
@@ -1615,7 +1627,7 @@ document.querySelectorAll("[data-c]").forEach(el=>cio.observe(el));
 })();
 
 /* ---- init ---- */
-state();rail();chart();ticker();dates();districts();feed();calc();
+state();rail();chart();ticker();autoPickDay();dates();districts();feed();calc();
 
 /* SMART_AUTH: кнопка в шапке знает, вошёл ли человек, и ведёт сразу
    в нужный кабинет. Пока ответа нет — остаётся «Войти», чтобы не мигало. */
@@ -1649,6 +1661,7 @@ state();rail();chart();ticker();dates();districts();feed();calc();
     const data=await r.json();
     if(!data || !Array.isArray(data.venues) || !data.venues.length) return;
     V=data.venues;
+    autoPickDay();
     dates();districts();feed();
   }catch(e){ /* сеть недоступна — тихо остаёмся на текущих данных */ }
 })();
