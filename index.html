@@ -130,7 +130,12 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.022em;line-hei
 
 /* ---------- BOOT ---------- */
 #boot{position:fixed;inset:0;z-index:250;background:var(--espresso);display:grid;place-items:center;transition:opacity .6s cubic-bezier(.6,0,.2,1),visibility .6s}
-#boot.done{opacity:0;visibility:hidden}
+/* pointer-events обязателен: visibility переключается лишь в КОНЦЕ
+   перехода, и все 0.6 с заставка невидима, но перехватывает нажатия.
+   Если переход не завершится (вкладку свернули, браузер притормозил),
+   она осталась бы невидимой ловушкой — сайт выглядит рабочим и не
+   реагирует ни на одно касание. */
+#boot.done{opacity:0;visibility:hidden;pointer-events:none}
 .boot-in{text-align:center}
 .boot-mk{font-family:var(--disp);font-weight:700;font-size:clamp(26px,4.4vw,42px);color:var(--cream);letter-spacing:-.02em;overflow:hidden;line-height:1.2}
 .boot-mk span{display:inline-block;transform:translateY(110%);animation:up .8s cubic-bezier(.19,1,.22,1) .1s forwards}
@@ -1160,7 +1165,13 @@ let dayOffset=0;   // 0 — сегодня, 1 — завтра и так дал�
 const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---- boot ---- */
-window.addEventListener("load",()=>setTimeout(()=>$("boot").classList.add("done"), reduce?0:1250));
+(function(){
+  /* Одна зависшая картинка не должна оставить сайт под покрывалом:
+     ждём load, но со страховкой по времени. */
+  const hide=()=>{const b=$("boot"); if(b) b.classList.add("done");};
+  addEventListener("load",()=>setTimeout(hide, reduce?0:1250));
+  setTimeout(hide, 4000);
+})();
 
 /* ---- scroll progress ---- */
 addEventListener("scroll",()=>{
