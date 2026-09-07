@@ -1,0 +1,10 @@
+# https://tihiy-chas.ru/robots.txt
+
+User-agent: *
+Disallow: /api/
+
+# Служебные страницы (кабинет, вход, Mini App) закрыты через
+# <meta name="robots" content="noindex"> в самих страницах.
+# В robots.txt их НЕ запрещаем: иначе робот не сможет прочитать noindex.
+
+Sitemap: https://tihiy-chas.ru/sitemap.xml

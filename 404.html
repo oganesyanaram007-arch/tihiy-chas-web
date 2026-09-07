@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
+<title>Страница не найдена — Тихий Час</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{
+  color-scheme:light only;
+  --espresso:#17120E; --oat:#F5F1E8; --porcelain:#FCF9F3;
+  --honey:#E0A33C; --honey-d:#A9761F;
+  --ink:#1A140F; --ink-soft:#6C6155;
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,'Segoe UI','Roboto',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--porcelain); color:var(--ink);
+  font-family:var(--sans); -webkit-font-smoothing:antialiased;
+  display:flex; align-items:center; justify-content:center;
+  padding:24px; line-height:1.5;
+}
+.wrap{max-width:520px; text-align:center}
+.clock{font-size:64px; line-height:1; margin-bottom:20px}
+h1{font-size:clamp(26px,5vw,34px); line-height:1.2; margin:0 0 12px; letter-spacing:-.02em}
+p{margin:0 0 28px; color:var(--ink-soft); font-size:17px}
+.cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:48px; padding:0 22px; border-radius:999px;
+  font-size:16px; font-weight:600; text-decoration:none;
+  transition:background .18s ease, color .18s ease;
+}
+.btn-honey{background:var(--honey); color:var(--espresso)}
+.btn-honey:hover{background:var(--honey-d); color:var(--porcelain)}
+.btn-out{border:1.5px solid rgba(26,20,15,.22); color:var(--ink)}
+.btn-out:hover{background:var(--oat)}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="clock" aria-hidden="true">🕗</div>
+    <h1>Такой страницы нет</h1>
+    <p>Похоже, вы свернули не туда. Тихие часы ждут на главной — 
+       выберите район и займите окно за полминуты.</p>
+    <div class="cta">
+      <a class="btn btn-honey" href="/">На главную</a>
+      <a class="btn btn-out" href="/#now">Свободные часы</a>
+    </div>
+  </main>
+</body>
+</html>
