@@ -384,7 +384,13 @@ const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : 
 // только когда сам Telegram по-настоящему запустил мини-апп.
 // initData Telegram передаёт не всегда — зависит от способа открытия.
 // Проверяем несколько признаков, любой означает, что мы внутри клиента.
-const inRealTelegram = !!(tg && (
+// Самый надёжный признак — параметры tgWebApp… в адресе: их дописывает
+// сам Telegram при открытии мини-аппа, и они на месте даже если скрипт
+// telegram.org не загрузился (в России доступ к нему нестабилен).
+// Раньше при незагрузившемся SDK tg оставался null, признак давал false,
+// и поверх родной панели Telegram рисовалась наша имитация — две шапки.
+const tgInUrl = /tgWebApp/i.test(location.hash + location.search);
+const inRealTelegram = tgInUrl || !!(tg && (
   (tg.initData && tg.initData.length > 0) ||
   (tg.initDataUnsafe && tg.initDataUnsafe.user) ||
   (tg.platform && tg.platform !== "unknown") ||

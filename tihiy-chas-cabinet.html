@@ -464,7 +464,11 @@ function initTelegram(){
 // панель, и наша декоративная имитация становится лишним дублем.
 // initData Telegram передаёт не всегда — зависит от способа открытия.
 // Проверяем несколько признаков, любой означает, что мы внутри клиента.
-  inRealTelegram = !!(tg && (
+  // Параметры tgWebApp… в адресе дописывает сам Telegram, и они на месте
+  // даже если скрипт telegram.org не загрузился. Без этого при недоступном
+  // SDK поверх родной панели рисовалась наша имитация — две шапки подряд.
+  const tgInUrl = /tgWebApp/i.test(location.hash + location.search);
+  inRealTelegram = tgInUrl || !!(tg && (
     (tg.initData && tg.initData.length > 0) ||
     (tg.initDataUnsafe && tg.initDataUnsafe.user) ||
     (tg.platform && tg.platform !== "unknown") ||
