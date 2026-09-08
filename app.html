@@ -44,6 +44,20 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
 .screen-wrap{background:var(--oat);border-radius:44px;height:100%;overflow:hidden;display:flex;flex-direction:column;position:relative}
 @media(max-width:430px){.screen-wrap{border-radius:0}}
 
+/* Имитация системной шапки нужна была, только чтобы показывать дизайн
+   в браузере. Внутри Telegram она задваивала интерфейс: своя панель
+   плюс наша. Определять «мы в Telegram» оказалось ненадёжно — скрипт
+   telegram.org в России грузится не всегда, а на десктопе признаки
+   другие. Поэтому имитация выключена насовсем; для показа дизайна
+   её можно вернуть адресом ?demo=1. Навигация «Назад» переехала
+   в контент — см. .back-btn. */
+body:not(.demo-chrome) .statusbar,
+body:not(.demo-chrome) .tgbar{display:none !important}
+.back-btn{display:none;align-items:center;gap:5px;margin:2px 0 6px;padding:10px 14px 10px 10px;
+  min-height:44px;background:none;color:var(--ink-soft);font-size:15px;font-weight:600;
+  border-radius:12px}
+.back-btn.on{display:inline-flex}
+.back-btn:active{background:rgba(0,0,0,.05)}
 .statusbar{height:34px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-family:var(--sans);font-size:13px;font-weight:700;background:var(--espresso);color:#FBF7EF;flex:none}
 .statusbar .sig{display:flex;gap:5px;align-items:center}
 .tgbar{height:50px;background:var(--espresso);color:#FBF7EF;display:flex;align-items:center;padding:0 10px;flex:none;border-bottom:1px solid var(--line-dk)}
@@ -264,6 +278,9 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
     </div>
 
     <div class="app" id="app">
+      <button class="back-btn" id="backBtn" type="button">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M15 5l-7 7 7 7"/></svg>Назад</button>
 
       <!-- ===== ЛЕНТА ===== -->
       <section class="screen on" id="scr-feed">
@@ -396,13 +413,9 @@ const inRealTelegram = tgInUrl || !!(tg && (
   (tg.platform && tg.platform !== "unknown") ||
   tg.isExpanded !== undefined
 ));
-if(inRealTelegram){
-  // У настоящего Telegram уже есть собственная верхняя панель и статус-бар —
-  // наша декоративная имитация нужна только для показа дизайна в браузере
-  // отдельно от Telegram. Внутри реального клиента она лишняя и задваивает
-  // интерфейс — скрываем её полностью.
-  document.querySelectorAll('.statusbar, .tgbar').forEach(el => el.style.display = 'none');
-}
+// Имитация шапки скрыта в CSS всегда. Показать её можно только явно —
+// адресом ?demo=1, для снимков дизайна вне Telegram.
+if(/[?&]demo=1/.test(location.search)) document.body.classList.add("demo-chrome");
 if(tg){try{tg.ready();tg.expand();tg.setHeaderColor('#191410');tg.setBackgroundColor('#F4EFE6');
   const u=tg.initDataUnsafe&&tg.initDataUnsafe.user;
   if(u){document.getElementById('prName').textContent=u.first_name||'Гость';document.getElementById('prAva').textContent=(u.first_name||'Г')[0];}
@@ -579,12 +592,18 @@ const SCR={feed:"scr-feed",venue:"scr-venue",ok:"scr-ok",bk:"scr-bk",pr:"scr-pr"
 let screen="feed", tab="feed";
 function go(s){screen=s;Object.values(SCR).forEach(id=>$(id).classList.remove("on"));$(SCR[s]).classList.add("on");
  $("app").scrollTop=0;$("tgLeft").textContent=(s==="venue"||s==="ok")?"‹ Назад":"Закрыть";
+ $("backBtn").classList.toggle("on", s==="venue"||s==="ok");
+ if(tg&&tg.BackButton){ try{ (s==="venue"||s==="ok")?tg.BackButton.show():tg.BackButton.hide(); }catch(e){} }
  const mb=$("mainBtn");
  if(s==="venue"){mb.className="mainbtn show";setMB();}
  else if(s==="ok"){mb.className="mainbtn show";mb.textContent="К моим броням";}
  else mb.className="mainbtn";
  if(tg){try{(s==="venue"||s==="ok")?tg.BackButton.show():tg.BackButton.hide()}catch(e){}}}
-$("tgLeft").onclick=()=>{hap();if(screen==="venue")go("feed");else if(screen==="ok")go(tab==="bk"?"bk":"feed");else toast("В Telegram здесь закроется приложение");};
+function goBack(){hap();if(screen==="venue")go("feed");else if(screen==="ok")go(tab==="bk"?"bk":"feed");else toast("В Telegram здесь закроется приложение");}
+$("tgLeft").onclick=goBack;
+$("backBtn").onclick=goBack;
+/* Родная кнопка «Назад» Telegram, когда SDK доступен. */
+if(tg&&tg.BackButton){ try{ tg.BackButton.onClick(goBack); }catch(e){} }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{hap();
  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("sel"));t.classList.add("sel");tab=t.dataset.t;go(tab);});
 
