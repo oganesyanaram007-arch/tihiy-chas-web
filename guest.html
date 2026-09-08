@@ -141,7 +141,9 @@ body{font-family:var(--sans)}
   </div>
 </div></div></div>
 <div class="toast" id="toast"></div>
+<script src="/content/product.js"></script>
 <script>
+const P=window.PRODUCT;   /* content/product.json */
 const $=id=>document.getElementById(id);
 function csToggle(v){
   const sd=document.querySelector(".cab-side"), mk=document.getElementById("csMask");
@@ -236,9 +238,9 @@ function renderLoyalty(){
       <div class="bn-row"><span class="l">
         <svg class="ic" viewBox="0 0 24 24"><use href="#ic-list"/></svg>За бронь</span>
         <span class="r">+20 баллов</span></div>
-      <div class="bn-row"><span class="l">
+      ${P.depositCharged ? `<div class="bn-row"><span class="l">
         <svg class="ic" viewBox="0 0 24 24"><use href="#ic-store"/></svg>${L.deposit} баллов</span>
-        <span class="r">депозит в подарок</span></div>
+        <span class="r">депозит в подарок</span></div>` : ""}
     </div>
     ${L.history.length ? `<div class="card"><div class="bn-cap" style="color:var(--ink-soft);margin-bottom:6px">История начислений</div>
       ${L.history.map(h=>`<div class="bn-hist"><span>${h.reason}<br><span style="color:var(--ink-soft);font-size:12px">${h.date}</span></span>
