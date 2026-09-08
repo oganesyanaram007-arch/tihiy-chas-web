@@ -50,6 +50,37 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
   border-radius:9px;background:var(--err);color:#fff;font-size:10.5px;font-weight:700;
   display:grid;place-items:center;line-height:1}
 .tab{position:relative}
+/* ---------- погашение кода на входе ---------- */
+.rd{background:var(--porcelain);border:1px solid var(--line-lt);border-radius:16px;
+    padding:14px;margin-bottom:16px}
+.rd-cap{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+        color:var(--ink-soft);margin-bottom:10px}
+.rd-form{display:flex;gap:8px}
+/* Код набирают пальцем в спешке: поле крупное, моноширинное, буквы вразрядку. */
+#rdCode{flex:1;min-width:0;padding:13px 14px;border:1.5px solid var(--line-lt);
+        border-radius:12px;background:#fff;color:var(--ink);font-family:var(--mono);
+        font-size:19px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+        min-height:48px}
+#rdCode:focus{outline:none;border-color:var(--honey)}
+.rd-go{flex:none;padding:0 18px;min-height:48px;border:0;border-radius:12px;
+       background:var(--honey);color:var(--espresso);font-weight:700;font-size:15px}
+.rd-go:disabled{opacity:.55}
+.rd-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.rd-scan{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 14px;
+         border:1.5px solid var(--line-lt);border-radius:12px;background:#fff;
+         color:var(--ink);font-weight:600;font-size:14px}
+.rd-scan .ic{width:18px;height:18px}
+.rd-scan[hidden]{display:none}
+.rd-hint{font-size:12.5px;color:var(--ink-soft);flex:1;min-width:140px}
+.rd-msg{margin-top:11px;padding:11px 13px;border-radius:11px;font-size:14px;line-height:1.5}
+.rd-msg[hidden]{display:none}
+.rd-msg.ok{background:rgba(46,158,107,.12);color:#1d6c48}
+.rd-msg.err{background:rgba(190,60,45,.10);color:#9d2f22}
+.rd-cam{margin-top:12px}
+.rd-cam[hidden]{display:none}
+#rdVideo{width:100%;max-height:320px;border-radius:12px;background:#000;object-fit:cover}
+.rd-close{width:100%;margin-top:8px;min-height:44px;border:1.5px solid var(--line-lt);
+          border-radius:12px;background:#fff;color:var(--ink);font-weight:600}
 .bk-tabs{display:flex;gap:7px;margin:0 18px 14px;background:#EBE3D5;border-radius:11px;padding:3px}
 .bk-tab{flex:1;padding:8px;min-height:44px;border-radius:9px;font-size:13px;font-weight:600;color:var(--ink-soft);background:none}
 .bk-tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07)}
@@ -214,6 +245,7 @@ input[type=file]{display:none}
   <g id="ic-store"><path d="M4 9l1-5h14l1 5"/><path d="M4 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 9v9h14V9"/></g>
   <g id="ic-camera"><path d="M4 8h3l2-2h6l2 2h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></g>
   <g id="ic-clock"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></g>
+  <g id="ic-qr"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3M19 14h2M14 19h3M19 19h2"/></g>
   <g id="ic-check"><path d="M4.5 12.5 9.5 17.5 20 6.5"/></g>
   <g id="ic-plus"><path d="M12 5v14M5 12h14"/></g>
   <g id="ic-list"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></g>
@@ -281,6 +313,29 @@ input[type=file]{display:none}
           <div class="wz-title">Брони</div>
           <div class="wz-sub" id="bkSub">Гости, записанные на тихие часы</div>
         </div>
+        <!-- Погашение: код — основной путь, сканер только подставляет его
+             в это же поле. Стоит первым: у входа сотруднику нужно именно это. -->
+        <div class="rd">
+          <div class="rd-cap">Гость на входе</div>
+          <form class="rd-form" id="rdForm" autocomplete="off">
+            <input id="rdCode" inputmode="text" autocapitalize="characters"
+                   spellcheck="false" placeholder="Код брони"
+                   aria-label="Код брони, который назвал гость">
+            <button class="rd-go" type="submit" id="rdGo">Отметить</button>
+          </form>
+          <div class="rd-row">
+            <button class="rd-scan" type="button" id="rdScan">
+              <svg class="ic" viewBox="0 0 24 24"><use href="#ic-qr"/></svg>Сканировать QR
+            </button>
+            <span class="rd-hint">Гость называет код вслух — этого достаточно</span>
+          </div>
+          <div class="rd-msg" id="rdMsg" hidden></div>
+          <div class="rd-cam" id="rdCam" hidden>
+            <video id="rdVideo" playsinline muted></video>
+            <button class="rd-close" type="button" id="rdStop">Закрыть камеру</button>
+          </div>
+        </div>
+
         <div class="bk-tabs">
           <button class="bk-tab on" data-f="up">Ближайшие</button>
           <button class="bk-tab" data-f="past">Прошедшие</button>
@@ -579,6 +634,7 @@ let ME=null;
 async function boot(){
   await waitTelegramSdk(1800);
   initTelegram();
+  rdSyncScanButton();
   const u = (tg && tg.initDataUnsafe) ? tg.initDataUnsafe.user : null;
   ME = {name: (u && u.first_name) || "Владелец", id: (u && u.id) || 0};
   $("gateStatus").textContent = "Проверяем доступ…";
@@ -834,6 +890,114 @@ function renderBookings(){
       ${b.status==="active"?`<button class="bk-go" data-id="${b.id}">Подтвердить визит</button>`:""}`;
     box.appendChild(el);
   });
+}
+
+/* ---------------------------------------------------------------
+   Погашение кода на входе.
+
+   Решение продукта: код — основной механизм. Гость называет его вслух,
+   сотрудник вводит здесь. Это работает, когда у гостя сел телефон,
+   и не требует сканера.
+
+   QR — ускоритель, а не второй путь: сканер лишь подставляет тот же код
+   в то же поле и жмёт ту же кнопку. Поэтому серверная ручка одна.
+
+   Сканируем двумя способами, в порядке надёжности:
+     1) родным сканером Telegram — работает и на iPhone, и на Android;
+     2) камерой через BarcodeDetector — если кабинет открыли в браузере.
+   Если недоступно ни то, ни другое, кнопку прячем: обещать сотруднику
+   сканер, которого нет, хуже, чем не показывать его вовсе.
+   --------------------------------------------------------------- */
+function rdSay(text, ok){
+  const box=$("rdMsg");
+  box.textContent=text;
+  box.className="rd-msg "+(ok?"ok":"err");
+  box.hidden=false;
+}
+
+async function redeemCode(raw){
+  const code=(raw||"").trim();
+  if(!code){ rdSay("Введите код, который назвал гость", false); return; }
+  const btn=$("rdGo");
+  btn.disabled=true; btn.textContent="Проверяем…";
+  try{
+    const r=await api("/api/cab/bookings/redeem",
+                      {method:"POST", body:JSON.stringify({code})});
+    rdSay(r.message||"Визит отмечен", true);
+    $("rdCode").value="";
+    await refreshBookings();
+  }catch(err){
+    /* Отказ — это не сбой, а рабочая ситуация: код уже погашен, просрочен,
+       чужой. Сотруднику нужен текст, а не «ошибка сервера». */
+    rdSay(err.message||"Не удалось отметить визит", false);
+  }finally{
+    btn.disabled=false; btn.textContent="Отметить";
+  }
+}
+
+$("rdForm").onsubmit=e=>{ e.preventDefault(); hap(); redeemCode($("rdCode").value); };
+
+/* ---- сканер ---- */
+const hasTgScan = () => !!(tg && typeof tg.showScanQrPopup === "function");
+const hasCamScan = () => ("BarcodeDetector" in window)
+                      && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+let rdStream=null, rdLoop=null;
+
+function rdStopCamera(){
+  if(rdLoop){ cancelAnimationFrame(rdLoop); rdLoop=null; }
+  if(rdStream){ rdStream.getTracks().forEach(t=>t.stop()); rdStream=null; }
+  $("rdCam").hidden=true;
+}
+$("rdStop").onclick=()=>{ hap(); rdStopCamera(); };
+
+async function rdCamera(){
+  if(!hasCamScan()){
+    rdSay("Сканер в этом браузере недоступен — введите код вручную", false);
+    return;
+  }
+  try{
+    rdStream=await navigator.mediaDevices.getUserMedia(
+      {video:{facingMode:"environment"}});
+  }catch(e){
+    rdSay("Камера недоступна — введите код вручную", false);
+    return;
+  }
+  const v=$("rdVideo"), det=new BarcodeDetector({formats:["qr_code"]});
+  v.srcObject=rdStream; await v.play();
+  $("rdCam").hidden=false;
+  const tick=async()=>{
+    if(!rdStream) return;
+    try{
+      const found=await det.detect(v);
+      if(found.length){
+        const code=found[0].rawValue;
+        rdStopCamera();
+        $("rdCode").value=code;      /* тот же путь, что и ручной ввод */
+        return redeemCode(code);
+      }
+    }catch(e){ /* кадр не распознался — просто ждём следующий */ }
+    rdLoop=requestAnimationFrame(tick);
+  };
+  rdLoop=requestAnimationFrame(tick);
+}
+
+$("rdScan").onclick=()=>{
+  hap();
+  $("rdMsg").hidden=true;
+  if(hasTgScan()){
+    tg.showScanQrPopup({text:"Наведите на QR из приложения гостя"}, text=>{
+      if(text){ $("rdCode").value=text; redeemCode(text); }
+      return true;    /* закрыть окно сканера */
+    });
+    return;
+  }
+  rdCamera();
+};
+
+/* Ни родного сканера, ни BarcodeDetector — кнопке нечего делать.
+   Проверяем после инициализации Telegram: tg появляется не сразу. */
+function rdSyncScanButton(){
+  $("rdScan").hidden = !hasTgScan() && !hasCamScan();
 }
 
 document.querySelectorAll(".bk-tab").forEach(t=>t.onclick=()=>{hap();

@@ -43,6 +43,13 @@ body{font-family:var(--sans)}
 .bkc-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .bkc-hd b{font-family:var(--disp);font-size:16.5px}
 .bkc-m{font-size:12.5px;color:var(--ink-soft);margin-top:3px}
+.bkc-hint{font-size:13px;color:var(--ink-soft);margin:10px 0 4px;line-height:1.5}
+.bkc-hint .qr-t{color:var(--ink);font-weight:600;white-space:nowrap}
+/* Настоящий QR приходит картинкой с сервера; кука сессии уходит с запросом
+   сама, поэтому здесь достаточно обычного src. */
+.bkc-qr{display:block;margin:8px 0 12px;border:8px solid #fff;border-radius:12px;
+  outline:1px solid var(--line-lt);background:#fff}
+.bkc-qr[hidden]{display:none}
 .bkc-code{font-family:var(--mono);font-size:13px;background:#F4EFE6;
   padding:4px 9px;border-radius:7px;display:inline-block;margin-top:10px;letter-spacing:.4px}
 .st{font-size:10.5px;padding:4px 9px;border-radius:7px;font-weight:700;flex:none;white-space:nowrap}
@@ -174,7 +181,10 @@ function card(b){
       <div class="bkc-m">${fmt(b.date)}, ${b.hour}:00 — скидка −${b.discount}%</div>
       <div class="bkc-code">${b.code}</div>
     </div><span class="st ${b.status}">${ST[b.status]||b.status}</span></div>
-    ${b.status==="active"&&b.upcoming?`<button class="xbtn" data-id="${b.id}">Отменить бронь</button>`:""}
+    ${b.status==="active"&&b.upcoming?`<div class="bkc-hint">Назовите код на входе — сотрудник отметит визит.
+      <a href="#" class="qr-t" data-qr="${b.id}">Показать QR</a></div>
+      <img class="bkc-qr" data-qrimg="${b.id}" alt="QR-код брони" width="150" height="150" hidden>
+      <button class="xbtn" data-id="${b.id}">Отменить бронь</button>`:""}
   </div>`;
 }
 function empty(t,s,btn){
@@ -184,6 +194,21 @@ function empty(t,s,btn){
     ${btn?`<a class="save" style="display:inline-block;margin-top:20px;text-decoration:none" href="/">Выбрать заведение</a>`:""}
   </div>`;
 }
+/* QR в карточке брони. Слушаем на документе: список перерисовывается
+   после отмены и после загрузки, а обработчик должен пережить это. */
+document.addEventListener("click", e => {
+  const a = e.target.closest("[data-qr]");
+  if (!a) return;
+  e.preventDefault();
+  const img = document.querySelector(`[data-qrimg="${a.dataset.qr}"]`);
+  if (!img) return;
+  if (!img.hidden) { img.hidden = true; a.textContent = "Показать QR"; return; }
+  if (!img.getAttribute("src")) img.src = `/api/guest/bookings/${a.dataset.qr}/qr.png`;
+  img.onerror = () => { img.hidden = true; a.textContent = "QR недоступен — назовите код"; };
+  img.hidden = false;
+  a.textContent = "Скрыть QR";
+});
+
 function render(){
   const n=DATA.name||"Гость";
   $("hi").textContent=`Здравствуйте, ${n}!`;

@@ -180,7 +180,11 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
 .ok-badge .ic{width:34px;height:34px;stroke-width:2.4}
 .ok-wrap h2{font-family:var(--disp);font-weight:700;font-size:21px;color:var(--ink)}
 .ok-wrap .p{font-size:12.5px;color:var(--ink-soft);margin-top:4px}
-.qr{width:142px;height:142px;margin:16px auto 6px;border-radius:14px;background:repeating-conic-gradient(var(--espresso) 0 25%,#fff 0 50%);background-size:20px 20px;border:8px solid #fff;outline:1px solid var(--line-lt)}
+/* Настоящий QR приходит картинкой с сервера. Пока не загрузился —
+   место под него держим, чтобы экран не прыгал. */
+.qr{display:block;width:142px;height:142px;margin:14px auto 6px;border-radius:14px;background:#fff;border:8px solid #fff;outline:1px solid var(--line-lt);object-fit:contain}
+.qr[hidden]{display:none}
+.bk-qr{margin:4px auto 12px}
 .code{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--honey-d)}
 .ok-details{margin:14px 16px 0;text-align:left}
 .ghost-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 16px 0;background:var(--porcelain);border:1.5px solid var(--line-lt);border-radius:14px;padding:13px;font-size:13.5px;font-weight:700;color:var(--ink);width:calc(100% - 32px)}
@@ -349,8 +353,8 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
           <div class="ok-badge"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-check"/></svg></div>
           <h2>Место закреплено!</h2>
           <div class="p" id="okSub">—</div>
-          <div class="qr"></div>
-          <div class="code" id="okCode">ТЧ-0000</div>
+          <div class="code" id="okCode">—</div>
+          <img class="qr" id="okQr" alt="QR-код брони" width="142" height="142">
           <div class="p" style="margin-top:8px"><!--p:copy.appRedeemHint-->При входе назовите код сотруднику — он отметит визит. Если так быстрее, покажите QR: сотрудник считает его камерой.<!--/p--></div>
         </div>
         <div class="info-card ok-details" id="okDetails"></div>
@@ -498,6 +502,29 @@ async function api(path, opts={}){
   if(!parsed || data === null) throw new Error("Сервер вернул неожиданный ответ");
   return data;
 }
+/* QR брони.
+
+   Через <img src> не получится: мини-апп авторизуется заголовком
+   X-Init-Data, а картинке заголовок не передать. Поэтому тянем PNG
+   запросом и показываем как объектную ссылку.
+
+   Если QR не пришёл — прячем его и молчим. Гость называет код голосом,
+   картинка лишь ускоряет; падать из-за неё экран не должен. */
+let qrUrl = null;
+async function showQr(bookingId){
+  const qr = $("okQr");
+  qr.hidden = true;
+  if (qrUrl) { URL.revokeObjectURL(qrUrl); qrUrl = null; }
+  try{
+    const r = await fetch(`${API_URL}/bookings/${bookingId}/qr.png`,
+                          {headers:{"X-Init-Data": INIT}});
+    if(!r.ok) return;
+    qrUrl = URL.createObjectURL(await r.blob());
+    qr.src = qrUrl;
+    qr.hidden = false;
+  }catch(e){ /* нет связи — остаётся код */ }
+}
+
 function isoDate(off){
   const d=dateFor(off);
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -834,6 +861,7 @@ $("psPay").onclick=async()=>{hap();const btn=$("psPay"),byPts=$("payPts").classL
    booking={v,s,day:mDay,code:res.code,id:res.id};
    $("okSub").textContent=`${v.name} · ${dayLabel(mDay).toLowerCase()}, ${s[0]}:00 · −${s[1]}%`;
    $("okCode").textContent=res.code;
+   showQr(res.id);
    const d=dateFor(mDay);const dstr=String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0");
    $("okDetails").innerHTML=`
     <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#${IC[v.cat]}"/></svg><div><b>${v.name}</b><small>${v.place} · ${DN[v.d]}</small></div></div>
@@ -860,7 +888,7 @@ function bkLine(b){
     <div><div class="bk-name">${b.venue.name}</div>
     <div class="bk-when">${dstr} · ${b.hour}:00 · −${b.discount}% · ${b.code}</div></div>
     <div class="bk-eta">${b.status==="cancelled"?"отменена":(b.status==="visited"?"посещено":"активна")}</div></div>
-    ${b.status==="active"&&b.upcoming?`<div class="bk-save"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-ticket"/></svg>Код называете на месте · <a href="#" data-cancel="${b.id}" style="color:inherit;text-decoration:underline">отменить</a></div>`:""}
+    ${b.status==="active"&&b.upcoming?`<div class="bk-save"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-ticket"/></svg>Код называете на месте · <a href="#" data-qr="${b.id}" style="color:inherit;text-decoration:underline">показать QR</a> · <a href="#" data-cancel="${b.id}" style="color:inherit;text-decoration:underline">отменить</a></div><img class="qr bk-qr" data-qrimg="${b.id}" alt="QR-код брони" width="142" height="142" hidden>`:""}
   </div>`;
 }
 function renderUp(){
@@ -869,6 +897,22 @@ function renderUp(){
   if(!LOADED){box.innerHTML=`<div class="empty">Загружаем ваши брони…</div>`;return;}
   if(!up.length){box.innerHTML=`<div class="empty">Пока нет активных броней — выберите тихое окно в ленте</div>`;return;}
   box.innerHTML=up.map(bkLine).join("");
+  /* QR по требованию: тянуть картинку для каждой брони сразу — лишний
+     трафик на мобильной сети, а нужен он только у входа. */
+  box.querySelectorAll("[data-qr]").forEach(a=>a.onclick=async e=>{
+    e.preventDefault();hap();
+    const img=box.querySelector(`[data-qrimg="${a.dataset.qr}"]`);
+    if(!img) return;
+    if(!img.hidden){img.hidden=true;a.textContent="показать QR";return;}
+    a.textContent="загружаем…";
+    try{
+      const r=await fetch(`${API_URL}/bookings/${a.dataset.qr}/qr.png`,
+                          {headers:{"X-Init-Data": INIT}});
+      if(!r.ok) throw new Error();
+      img.src=URL.createObjectURL(await r.blob());
+      img.hidden=false;a.textContent="скрыть QR";
+    }catch(err){a.textContent="показать QR";toast("QR не загрузился — назовите код");}
+  });
   box.querySelectorAll("[data-cancel]").forEach(a=>a.onclick=async e=>{
     e.preventDefault();hap();
     try{
