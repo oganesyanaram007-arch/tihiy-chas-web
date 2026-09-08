@@ -37,13 +37,6 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
 .screen-wrap{background:var(--oat);border-radius:44px;height:100%;overflow:hidden;display:flex;flex-direction:column;position:relative}
 @media(max-width:430px){.screen-wrap{border-radius:0}}
 
-.statusbar{height:34px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-family:var(--sans);font-size:13px;font-weight:700;background:var(--espresso);color:#FBF7EF;flex:none}
-.tgbar{height:50px;background:var(--espresso);color:#FBF7EF;display:flex;align-items:center;padding:0 10px;flex:none;border-bottom:1px solid var(--line-dk)}
-.tg-left{color:var(--cream-soft);font-size:14.5px;padding:8px 10px;min-width:60px;text-align:left}
-.tg-title{flex:1;display:flex;align-items:center;justify-content:center;gap:9px}
-.tg-title .ic{width:20px;height:20px;stroke:var(--honey)}
-.tg-title b{font-family:var(--disp);font-weight:700;font-size:15.5px}
-.tg-menu{min-width:60px}
 
 .app{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-bottom:118px;scrollbar-width:none}
 .app::-webkit-scrollbar{display:none}
@@ -474,9 +467,6 @@ function initTelegram(){
     (tg.platform && tg.platform !== "unknown") ||
     tg.isExpanded !== undefined
   ));
-  if(inRealTelegram){
-    document.querySelectorAll('.statusbar, .tgbar').forEach(el => el.style.display = 'none');
-  }
   if(tg){try{tg.ready();tg.expand();tg.setHeaderColor('#191410');tg.setBackgroundColor('#F4EFE6');}catch(e){}}
 }
 function hap(){if(tg&&tg.HapticFeedback){try{tg.HapticFeedback.impactOccurred('light')}catch(e){}}}

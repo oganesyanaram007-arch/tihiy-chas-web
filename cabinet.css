@@ -6,7 +6,7 @@ body{background:#F7F3EA;display:block;padding:0;min-height:100vh;color:var(--ink
   border-radius:0;padding:0;box-shadow:none}
 .screen-wrap{border-radius:0;height:auto;min-height:100vh;background:none;
   display:grid;grid-template-columns:var(--cs-w) 1fr;overflow:visible}
-.tabbar,.statusbar,.tgbar{display:none !important}
+.tabbar{display:none !important}   /* нижние вкладки телефона: в вебе своё меню */
 .cab-side{background:var(--espresso);color:#fff;display:flex;flex-direction:column;
   padding:26px 16px 20px;position:sticky;top:0;height:100vh}
 .cs-logo{font-family:var(--disp);font-weight:700;font-size:21px;color:#fff;

@@ -40,32 +40,19 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
 @media(max-width:860px){.side{display:none}body{padding:0}}
 
 .phone{width:393px;max-width:100vw;height:812px;max-height:100vh;background:#000;border-radius:54px;padding:10px;box-shadow:0 44px 100px rgba(0,0,0,.6);position:relative}
-@media(max-width:430px){.phone{border-radius:0;padding:0;height:100vh;height:100dvh}}
+@media(max-width:430px){.phone{border-radius:0;padding:0;height:100vh;height:100dvh;
+  /* Внутри Telegram 100dvh завышена — берём реальную высоту окна. */
+  height:var(--tg-vh,100dvh)}}
 .screen-wrap{background:var(--oat);border-radius:44px;height:100%;overflow:hidden;display:flex;flex-direction:column;position:relative}
 @media(max-width:430px){.screen-wrap{border-radius:0}}
 
-/* Имитация системной шапки нужна была, только чтобы показывать дизайн
-   в браузере. Внутри Telegram она задваивала интерфейс: своя панель
-   плюс наша. Определять «мы в Telegram» оказалось ненадёжно — скрипт
-   telegram.org в России грузится не всегда, а на десктопе признаки
-   другие. Поэтому имитация выключена насовсем; для показа дизайна
-   её можно вернуть адресом ?demo=1. Навигация «Назад» переехала
-   в контент — см. .back-btn. */
-body:not(.demo-chrome) .statusbar,
-body:not(.demo-chrome) .tgbar{display:none !important}
+/* Кнопка «Назад» внутри контента. Раньше её роль играла имитация
+   системной шапки Telegram — она удалена: у клиента своя панель. */
 .back-btn{display:none;align-items:center;gap:5px;margin:2px 0 6px;padding:10px 14px 10px 10px;
   min-height:44px;background:none;color:var(--ink-soft);font-size:15px;font-weight:600;
   border-radius:12px}
 .back-btn.on{display:inline-flex}
 .back-btn:active{background:rgba(0,0,0,.05)}
-.statusbar{height:34px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-family:var(--sans);font-size:13px;font-weight:700;background:var(--espresso);color:#FBF7EF;flex:none}
-.statusbar .sig{display:flex;gap:5px;align-items:center}
-.tgbar{height:50px;background:var(--espresso);color:#FBF7EF;display:flex;align-items:center;padding:0 10px;flex:none;border-bottom:1px solid var(--line-dk)}
-.tg-left{color:var(--cream-soft);font-size:14.5px;padding:8px 10px;min-width:60px;text-align:left}
-.tg-title{flex:1;display:flex;align-items:center;justify-content:center;gap:9px}
-.tg-title .mk{width:22px;height:22px;stroke:var(--honey)}
-.tg-title b{font-family:var(--disp);font-weight:700;font-size:16px}
-.tg-menu{color:var(--cream-soft);font-size:20px;padding:8px 12px;min-width:60px;text-align:right;letter-spacing:2px}
 
 .app{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-bottom:158px;scrollbar-width:none}
 .app::-webkit-scrollbar{display:none}
@@ -270,13 +257,6 @@ body:not(.demo-chrome) .tgbar{display:none !important}
   </div>
 
   <div class="phone"><div class="screen-wrap">
-    <div class="statusbar"><span id="clock">14:37</span><span class="sig">●●● ▪ 100</span></div>
-    <div class="tgbar">
-      <button class="tg-left" id="tgLeft">Закрыть</button>
-      <div class="tg-title"><svg class="mk ic" viewBox="0 0 24 24"><use href="#ic-mark"/></svg><b>Тихий Час</b></div>
-      <button class="tg-menu">⋮</button>
-    </div>
-
     <div class="app" id="app">
       <button class="back-btn" id="backBtn" type="button">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -413,13 +393,27 @@ const inRealTelegram = tgInUrl || !!(tg && (
   (tg.platform && tg.platform !== "unknown") ||
   tg.isExpanded !== undefined
 ));
-// Имитация шапки скрыта в CSS всегда. Показать её можно только явно —
-// адресом ?demo=1, для снимков дизайна вне Telegram.
-if(/[?&]demo=1/.test(location.search)) document.body.classList.add("demo-chrome");
-if(tg){try{tg.ready();tg.expand();tg.setHeaderColor('#191410');tg.setBackgroundColor('#F4EFE6');
+/* Инициализация мини-аппа. Цвет шапки и фона совпадает с фоном ленты
+   (--oat #F4EFE6), чтобы родная панель Telegram сливалась с контентом,
+   а не выглядела чужой полосой сверху. */
+const TG_BG = "#F4EFE6";
+if(tg){try{
+  tg.ready(); tg.expand();
+  if(tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+  tg.setHeaderColor(TG_BG); tg.setBackgroundColor(TG_BG);
   const u=tg.initDataUnsafe&&tg.initDataUnsafe.user;
   if(u){document.getElementById('prName').textContent=u.first_name||'Гость';document.getElementById('prAva').textContent=(u.first_name||'Г')[0];}
 }catch(e){}}
+
+/* Реальная высота окна мини-аппа в --tg-vh: 100vh внутри Telegram врёт,
+   из-за чего нижние вкладки уезжали под край экрана. */
+function syncViewport(){
+  const h=(tg&&(tg.viewportStableHeight||tg.viewportHeight))||window.innerHeight;
+  document.documentElement.style.setProperty("--tg-vh", Math.round(h)+"px");
+}
+syncViewport();
+if(tg&&tg.onEvent){ try{ tg.onEvent("viewportChanged", syncViewport); }catch(e){} }
+addEventListener("resize", syncViewport);
 function hap(){if(tg&&tg.HapticFeedback){try{tg.HapticFeedback.impactOccurred('light')}catch(e){}}}
 const $=id=>document.getElementById(id);
 
@@ -508,10 +502,10 @@ function countFor(off){
   }).length;
 }
 
-/* ---------- clock ---------- */
-function clock(){const d=new Date();$("clock").textContent=d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
- const h=d.getHours(),inH=h>=10&&h<22;
- $("liveTxt").textContent=inH?"тихий час":"вечерний пик";}
+/* Подпись «тихий час / вечерний пик». Часы отсюда ушли вместе
+   с имитацией статус-бара — время показывает сам телефон. */
+function clock(){const h=new Date().getHours();
+ $("liveTxt").textContent=(h>=10&&h<22)?"тихий час":"вечерний пик";}
 
 /* ---------- дни в ленте (7 кнопок) ---------- */
 function dayRow(){
@@ -591,16 +585,15 @@ $("cats").addEventListener("click",e=>{const b=e.target.closest(".cat");if(!b)re
 const SCR={feed:"scr-feed",venue:"scr-venue",ok:"scr-ok",bk:"scr-bk",pr:"scr-pr"};
 let screen="feed", tab="feed";
 function go(s){screen=s;Object.values(SCR).forEach(id=>$(id).classList.remove("on"));$(SCR[s]).classList.add("on");
- $("app").scrollTop=0;$("tgLeft").textContent=(s==="venue"||s==="ok")?"‹ Назад":"Закрыть";
+ $("app").scrollTop=0;
  $("backBtn").classList.toggle("on", s==="venue"||s==="ok");
  if(tg&&tg.BackButton){ try{ (s==="venue"||s==="ok")?tg.BackButton.show():tg.BackButton.hide(); }catch(e){} }
  const mb=$("mainBtn");
  if(s==="venue"){mb.className="mainbtn show";setMB();}
  else if(s==="ok"){mb.className="mainbtn show";mb.textContent="К моим броням";}
  else mb.className="mainbtn";
- if(tg){try{(s==="venue"||s==="ok")?tg.BackButton.show():tg.BackButton.hide()}catch(e){}}}
+}
 function goBack(){hap();if(screen==="venue")go("feed");else if(screen==="ok")go(tab==="bk"?"bk":"feed");else toast("В Telegram здесь закроется приложение");}
-$("tgLeft").onclick=goBack;
 $("backBtn").onclick=goBack;
 /* Родная кнопка «Назад» Telegram, когда SDK доступен. */
 if(tg&&tg.BackButton){ try{ tg.BackButton.onClick(goBack); }catch(e){} }
