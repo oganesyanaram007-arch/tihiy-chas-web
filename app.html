@@ -8,6 +8,7 @@
 <meta name="supported-color-schemes" content="light">
 <title>Тихий Час — Telegram Mini App</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="/content/product.js"></script>
 <!-- Google Fonts убраны: сервис недоступен в России, браузер ждал
      таймаута с пустым экраном. Системные шрифты рисуются сразу. -->
 <style>
@@ -95,8 +96,42 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
 
 .list{padding:0 16px;display:flex;flex-direction:column;gap:11px}
 .vcard{background:var(--porcelain);border:1px solid var(--line-lt);border-radius:18px;overflow:hidden}
-.vc-cover{position:relative;height:78px}
+.vc-cover{position:relative;height:78px;overflow:hidden}
 .vc-cover .art{position:absolute;inset:0}
+/* Снимок поверх абстрактного арта: если не загрузился — удаляется,
+   и арт остаётся запасной обложкой. */
+.vc-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+
+/* Галерея на экране заведения */
+.v-gal{position:relative;height:min(230px,30vh);background:#141010;overflow:hidden;cursor:zoom-in}
+.v-gal img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.v-gal .art{position:absolute;inset:0}
+.v-nav{position:absolute;top:50%;margin-top:-17px;z-index:3;width:34px;height:34px;border-radius:50%;
+  background:rgba(23,18,14,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.2);color:#fff;display:grid;place-items:center}
+.v-nav::after{content:"";position:absolute;inset:-6px;border-radius:50%}
+.v-nav.prev{left:10px}.v-nav.next{right:10px}
+.v-dots{position:absolute;left:0;right:0;bottom:8px;z-index:3;display:flex;gap:5px;justify-content:center;pointer-events:none}
+.v-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5)}
+.v-dots i.on{background:var(--honey);width:16px;border-radius:3px}
+.v-count{position:absolute;left:12px;top:12px;z-index:3;font-family:var(--mono);font-size:11px;
+  font-weight:700;color:#fff;background:rgba(23,18,14,.55);border-radius:100px;padding:4px 10px}
+.v-zoom{position:absolute;right:12px;bottom:10px;z-index:3;width:30px;height:30px;border-radius:50%;
+  background:rgba(23,18,14,.55);border:1px solid rgba(255,255,255,.2);color:#fff;
+  display:grid;place-items:center;pointer-events:none}
+
+/* Полноэкранный просмотр */
+.lb{position:fixed;inset:0;z-index:400;background:#0B0908;display:none;align-items:center;justify-content:center}
+.lb.open{display:flex}
+.lb img{max-width:100%;max-height:100%;object-fit:contain}
+.lb-x,.lb-nav{position:absolute;width:44px;height:44px;border-radius:50%;z-index:2;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;
+  display:grid;place-items:center}
+.lb-x{top:14px;right:14px}
+.lb-nav{top:50%;margin-top:-22px}
+.lb-nav.prev{left:12px}.lb-nav.next{right:12px}
+.lb-count{position:absolute;top:20px;left:18px;z-index:2;font-family:var(--mono);font-size:12.5px;
+  font-weight:700;color:#fff;background:rgba(255,255,255,.12);border-radius:100px;padding:6px 12px}
 .art-food{background:radial-gradient(90% 120% at 22% 10%,#3C6A5B,transparent 62%),linear-gradient(150deg,#1D4A3E,#0E2A24 78%)}
 .art-coffee{background:radial-gradient(90% 120% at 22% 10%,#A87C46,transparent 62%),linear-gradient(150deg,#6B4726,#2E1D0F 78%)}
 .art-beauty{background:radial-gradient(90% 120% at 22% 10%,#B4658C,transparent 62%),linear-gradient(150deg,#7A3055,#2E1122 78%)}
@@ -252,8 +287,8 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
   <div class="side">
     <b>Тихий Час · Mini App</b>
     Гостевое приложение внутри Telegram — без установки, вход в один тап. Теперь с выбором даты и района, как на сайте.
-    <div class="tip"><b>Прототип кликабелен</b>Выберите день и район, откройте заведение, «оплатите» депозит 99 ₽ и получите QR. Вкладки внизу — Лента, Брони, Профиль.</div>
-    <div class="tip"><b>Синхронизировано с ботом</b>34 заведения, 15 районов Петербурга, бронь на 14 дней вперёд, единый депозит 99 ₽.</div>
+    <div class="tip"><b>Как пользоваться</b>Выберите день и район, откройте заведение, подтвердите бронь и получите код. Вкладки внизу — Лента, Брони, Профиль.</div>
+    <div class="tip"><b>Одна база с сайтом и ботом</b>Витрина, брони и коды приезжают с того же сервера, что обслуживает сайт. Бронь на <!--p:horizonDays-->14 дней<!--/p--> вперёд.</div>
   </div>
 
   <div class="phone"><div class="screen-wrap">
@@ -291,6 +326,7 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
 
       <!-- ===== ЗАВЕДЕНИЕ ===== -->
       <section class="screen" id="scr-venue">
+        <div class="v-gal" id="vGal"></div>
         <div class="v-hero">
           <div class="v-ic"><svg class="ic" id="vIcon" viewBox="0 0 24 24"><use href="#ic-food"/></svg></div>
           <div><div class="v-name" id="vName">—</div><div class="v-sub" id="vSub">—</div></div>
@@ -301,8 +337,8 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
         <div class="row-lbl">Свободные часы</div>
         <div class="slot-grid" id="vSlots"></div>
         <div class="info-card">
-          <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-bolt"/></svg><div>Депозит 99 ₽ — <b>зачитывается в счёт</b><small>заплатите на месте на 99 ₽ меньше</small></div></div>
-          <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-return"/></svg><div>Отмена за 3 часа — бесплатно<small>депозит вернётся автоматически</small></div></div>
+          <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-bolt"/></svg><div><!--p:copy.appInfoPrice-->Бронь <b>бесплатна</b><small>в заведении платите как обычно, со скидкой тихого часа</small><!--/p--></div></div>
+          <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-return"/></svg><div><!--p:copy.appInfoCancel-->Отмена за 3 часа — бесплатно<small>отменить можно во вкладке «Брони»</small><!--/p--></div></div>
           <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-receipt"/></svg><div>Скидка от текущей цены<small>без завышенного прайса, проверяем визитами</small></div></div>
         </div>
       </section>
@@ -315,7 +351,7 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
           <div class="p" id="okSub">—</div>
           <div class="qr"></div>
           <div class="code" id="okCode">ТЧ-0000</div>
-          <div class="p" style="margin-top:8px">При входе покажите QR — за вами закрепят столик и отметят визит в системе</div>
+          <div class="p" style="margin-top:8px"><!--p:copy.appRedeemHint-->При входе назовите код сотруднику — он отметит визит. Если так быстрее, покажите QR: сотрудник считает его камерой.<!--/p--></div>
         </div>
         <div class="info-card ok-details" id="okDetails"></div>
         <button class="ghost-btn" id="remindBtn"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-bell"/></svg>Напомнить за 2 часа</button>
@@ -356,17 +392,30 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
       <button class="tab" data-t="pr"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-user"/></svg>Профиль</button>
     </div>
 
+    <!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР ФОТО -->
+    <div class="lb" id="lb" aria-hidden="true">
+      <span class="lb-count" id="lbCount">1 / 1</span>
+      <button class="lb-x" id="lbX" type="button" aria-label="Закрыть фото">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <button class="lb-nav prev" id="lbPrev" type="button" aria-label="Предыдущее">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="lb-nav next" id="lbNext" type="button" aria-label="Следующее">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+      <img id="lbImg" alt="">
+    </div>
+
     <!-- PAY SHEET -->
     <div class="psheet" id="pay">
       <div class="ps-in">
         <div class="ps-grab"></div>
-        <h3 id="payTitle">Депозит за бронь · 99 ₽</h3>
+        <h3 id="payTitle"><!--p:copy.appPayTitle-->Подтвердите бронь<!--/p--></h3>
         <div class="sub" id="paySub">—</div>
-        <div class="pay-m sel" data-m="0"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-spb"/></svg></span>СБП · Система быстрых платежей<span class="rad"></span></div>
-        <div class="pay-m" data-m="1"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-receipt"/></svg></span>Карта •• 4212<span class="rad"></span></div>
-        <div class="pay-m lock" data-m="2" id="payPts"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-spark"/></svg></span><span id="payPtsTxt">Баллами · нужно 99, у вас 120</span><span class="rad"></span></div>
-        <button class="ps-pay" id="psPay">Оплатить 99 ₽</button>
-        <div class="ps-note">Чек по 54-ФЗ пришлёт @Tihiy_chas_yourbot · депозит зачитывается в счёт</div>
+        <div id="payMethods" hidden>
+          <div class="pay-m sel" data-m="0"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-spb"/></svg></span>СБП · Система быстрых платежей<span class="rad"></span></div>
+          <div class="pay-m lock" data-m="2" id="payPts"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-spark"/></svg></span><span id="payPtsTxt">Баллами</span><span class="rad"></span></div>
+        </div>
+        <button class="ps-pay" id="psPay"><!--p:copy.appPayButton-->Забронировать<!--/p--></button>
+        <div class="ps-note"><!--p:copy.appPayNote-->Деньги за бронь не списываются. В заведении вы платите как обычно, со скидкой тихого часа.<!--/p--></div>
       </div>
     </div>
 
@@ -455,7 +504,8 @@ function isoDate(off){
 }
 
 /* ---------- данные: 34 заведения, 15 районов — синхронизировано с сайтом и ботом ---------- */
-const DEP=99;
+const P=window.PRODUCT;   /* content/product.json */
+const DEP=P.deposit;
 const DISTRICTS=[
  ["all","Весь Петербург"],["petro","Петроградский"],["centr","Центральный"],["adm","Адмиралтейский"],
  ["vasil","Василеостровский"],["mosk","Московский"],["nev","Невский"],["primor","Приморский"],
@@ -548,6 +598,40 @@ function showLoadError(msg){
   const rb=$("retryBtn");
   if(rb) rb.onclick=()=>{hap();location.reload();};
 }
+/* ---------- фотографии заведения ----------
+   Те же правила, что на сайте: гость должен видеть место, а не только
+   абстрактную обложку по категории. */
+function venuePhoto(v){
+  const p = v.photo || v.cover || v.image || v.cover_url || v.photo_url ||
+            (Array.isArray(v.photos) && v.photos.length ? v.photos[0] : null);
+  if(!p) return "";
+  const u = typeof p === "string" ? p : (p.url || p.src || "");
+  return typeof u === "string" ? u : "";
+}
+function photoAt(v, idx, w){
+  const base=venuePhoto(v);
+  if(!base) return "";
+  return base.replace(/([?&])w=\d+/, "$1w="+(w||900)).replace(/&i=\d+/, "") + "&i=" + idx;
+}
+function photoCount(v){ return Math.max(1, +v.photos || 1); }
+/* place у заведений из кабинета уже содержит район — не дублируем. */
+function venueMeta(v){
+  const dn=DN[v.d]||"", pl=(v.place||"").trim();
+  if(!pl) return dn;
+  return (dn && !pl.includes(dn)) ? pl+" \u00b7 "+dn : pl;
+}
+/* Пустой rate давал «★ » без числа; звезда только у настоящей оценки. */
+function rateHtml(v, cls){
+  const r=(v.rate==null?"":String(v.rate)).trim();
+  if(!r) return "";
+  const isScore=/^[0-9]+([.,][0-9]+)?$/.test(r);
+  return `<span class="${cls}">${isScore?"\u2605 "+r:r}</span>`;
+}
+function coverTag(v){
+  const u=venuePhoto(v);
+  return u ? `<img class="vc-img" src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : "";
+}
+
 function feed(){
  const L=$("feedList");
  // Если данные не загрузились, переключение категории или района не должно
@@ -563,12 +647,12 @@ function feed(){
   const best=Math.max(...daySlots.map(s=>s[1]));
   const el=document.createElement("div");el.className="vcard";
   el.innerHTML=`
-   <div class="vc-cover"><div class="art art-${v.cat}"></div>
+   <div class="vc-cover"><div class="art art-${v.cat}"></div>${coverTag(v)}
      <span class="vc-off">−${best}%</span>
      <span class="vc-ic-mini"><svg class="ic" style="width:17px;height:17px" viewBox="0 0 24 24"><use href="#${IC[v.cat]}"/></svg></span></div>
    <div class="vc-body">
-     <div class="vc-top"><span class="vc-name">${v.name}</span><span class="vc-rate">★ ${v.rate}</span></div>
-     <div class="vc-meta">${v.place} · ${DN[v.d]}</div>
+     <div class="vc-top"><span class="vc-name">${v.name}</span>${rateHtml(v,"vc-rate")}</div>
+     <div class="vc-meta">${venueMeta(v)}</div>
      <div class="vc-slots">${daySlots.map(s=>`<span class="vslot">${s[0]}:00 <em>−${s[1]}%</em></span>`).join("")}</div>
      <div class="vc-foot"><span class="vc-left">${v.left}</span><span class="vc-go">Забронировать →</span></div>
    </div>`;
@@ -593,7 +677,65 @@ function go(s){screen=s;Object.values(SCR).forEach(id=>$(id).classList.remove("o
  else if(s==="ok"){mb.className="mainbtn show";mb.textContent="К моим броням";}
  else mb.className="mainbtn";
 }
-function goBack(){hap();if(screen==="venue")go("feed");else if(screen==="ok")go(tab==="bk"?"bk":"feed");else toast("В Telegram здесь закроется приложение");}
+/* ---------- полноэкранный просмотр фото ---------- */
+let lbOpen=false;
+function lbRender(){
+  const v=V[vIdx];
+  $("lbImg").src=photoAt(v,gI,1600);
+  $("lbCount").textContent=(gI+1)+" / "+gN;
+  const many=gN>1;
+  $("lbPrev").style.display=many?"grid":"none";
+  $("lbNext").style.display=many?"grid":"none";
+  $("lbCount").style.display=many?"block":"none";
+  if(many){ const pre=new Image(); pre.src=photoAt(v,(gI+1)%gN,1600); }
+}
+function lbShow(){
+  if(!venuePhoto(V[vIdx])) return;
+  lbOpen=true; $("lb").classList.add("open"); $("lb").setAttribute("aria-hidden","false");
+  if(tg&&tg.BackButton){ try{ tg.BackButton.show(); }catch(e){} }
+  lbRender();
+}
+function lbHide(){
+  lbOpen=false; $("lb").classList.remove("open"); $("lb").setAttribute("aria-hidden","true");
+  $("lbImg").removeAttribute("src");
+  renderGallery(V[vIdx]);
+}
+$("vGal").addEventListener("click",e=>{ if(!e.target.closest(".v-nav")) { hap(); lbShow(); } });
+$("lbX").onclick=()=>{hap();lbHide();};
+$("lb").addEventListener("click",e=>{ if(e.target.id==="lb") lbHide(); });
+$("lbPrev").onclick=e=>{e.stopPropagation();hap();gI=(gI-1+gN)%gN;lbRender();};
+$("lbNext").onclick=e=>{e.stopPropagation();hap();gI=(gI+1)%gN;lbRender();};
+(function(){
+  /* Свайп: по фото — листание, вниз — закрыть. Вертикальный жест
+     не должен листать, иначе прокрутка меняла бы кадр. */
+  const el=$("lb"); let x0=null,y0=null;
+  el.addEventListener("touchstart",e=>{if(e.touches.length!==1)return;x0=e.touches[0].clientX;y0=e.touches[0].clientY;},{passive:true});
+  el.addEventListener("touchend",e=>{
+    if(x0===null)return;
+    const t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0;
+    if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)*1.5){ gI=(gI+(dx<0?1:-1)+gN)%gN; lbRender(); }
+    else if(dy>80 && Math.abs(dy)>Math.abs(dx)) lbHide();
+    x0=y0=null;
+  },{passive:true});
+  const g=$("vGal");
+  g.addEventListener("touchstart",e=>{if(e.touches.length!==1)return;x0=e.touches[0].clientX;y0=e.touches[0].clientY;},{passive:true});
+  g.addEventListener("touchend",e=>{
+    if(x0===null||gN<2)return;
+    const t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0;
+    if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)*1.5){ gI=(gI+(dx<0?1:-1)+gN)%gN; renderGallery(V[vIdx]); }
+    x0=y0=null;
+  },{passive:true});
+})();
+addEventListener("keydown",e=>{
+  if(!lbOpen) return;
+  if(e.key==="Escape") lbHide();
+  else if(e.key==="ArrowLeft"&&gN>1){gI=(gI-1+gN)%gN;lbRender();}
+  else if(e.key==="ArrowRight"&&gN>1){gI=(gI+1)%gN;lbRender();}
+});
+
+function goBack(){hap();
+ if(lbOpen){ lbHide(); return; }   /* сначала закрываем фото, а не экран */
+ if(screen==="venue")go("feed");else if(screen==="ok")go(tab==="bk"?"bk":"feed");else toast("В Telegram здесь закроется приложение");}
 $("backBtn").onclick=goBack;
 /* Родная кнопка «Назад» Telegram, когда SDK доступен. */
 if(tg&&tg.BackButton){ try{ tg.BackButton.onClick(goBack); }catch(e){} }
@@ -602,9 +744,43 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{hap();
 
 /* ---------- заведение ---------- */
 function venueDays(v){const out=[];for(let off=0;off<7;off++)if(worksOn(v,off))out.push(off);return out;}
+/* ---------- галерея на экране заведения ---------- */
+let gI=0, gN=1;
+function renderGallery(v){
+  const c=$("vGal");
+  c.className="v-gal";
+  const u=venuePhoto(v);
+  if(!u){                       // фото нет — прежняя обложка по категории
+    c.classList.remove("v-gal"); c.className="v-gal";
+    c.innerHTML=`<div class="art art-${v.cat}"></div>`;
+    c.style.cursor="default";
+    return;
+  }
+  c.style.cursor="zoom-in";
+  const nav = gN<2 ? "" : `
+    <button class="v-nav prev" type="button" aria-label="Предыдущее фото">
+      <svg class="ic" style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="v-nav next" type="button" aria-label="Следующее фото">
+      <svg class="ic" style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    <span class="v-count">${gI+1} / ${gN}</span>
+    <div class="v-dots">${Array.from({length:gN},(_,k)=>`<i class="${k===gI?"on":""}"></i>`).join("")}</div>`;
+  c.innerHTML=`<div class="art art-${v.cat}"></div>
+    <img src="${photoAt(v,gI,900)}" alt="${v.name}" decoding="async" onerror="this.remove()">
+    ${nav}
+    <span class="v-zoom"><svg class="ic" style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5"/></svg></span>`;
+  const p=c.querySelector(".v-nav.prev"), nx=c.querySelector(".v-nav.next");
+  if(p) p.onclick=e=>{e.stopPropagation();hap();gI=(gI-1+gN)%gN;renderGallery(v);};
+  if(nx) nx.onclick=e=>{e.stopPropagation();hap();gI=(gI+1)%gN;renderGallery(v);};
+  if(gN>1){ const pre=new Image(); pre.src=photoAt(v,(gI+1)%gN,900); }
+}
+
 function openVenue(i){hap();vIdx=i;const v=V[i];mDay=venueDays(v).includes(dayOff)?dayOff:venueDays(v)[0]??0;
  $("vIcon").innerHTML=`<use href="#${IC[v.cat]}"/>`;
- $("vName").textContent=v.name;$("vSub").textContent=v.place+" · "+DN[v.d];$("vRate").textContent="★ "+v.rate;
+ $("vName").textContent=v.name;
+ $("vSub").textContent=venueMeta(v);
+ const rt=(v.rate==null?"":String(v.rate)).trim();
+ $("vRate").textContent = rt ? (/^[0-9]+([.,][0-9]+)?$/.test(rt) ? "★ "+rt : rt) : "";
+ gI=0; gN=photoCount(v); renderGallery(v);
  renderVenueDays(v);renderVenueSlots(v);
  go("venue");}
 function renderVenueDays(v){
@@ -632,7 +808,9 @@ function setMB(){const v=V[vIdx],sl=slotsFor(v,mDay);if(!sl.length){$("mainBtn")
 /* ---------- MainButton → оплата ---------- */
 $("mainBtn").onclick=()=>{hap();
  if(screen==="venue"){const v=V[vIdx],sl=slotsFor(v,mDay);if(!sl.length)return;const s=sl[slotIdx]||sl[0];
-   $("payTitle").textContent=`Депозит за бронь · ${DEP} ₽`;$("psPay").textContent=`Оплатить ${DEP} ₽`;
+   $("payTitle").textContent=P.text.appPayTitle;$("psPay").textContent=P.text.appPayButton;
+   /* Способы оплаты показываем, только когда деньги правда списываются. */
+   $("payMethods").hidden=!P.depositCharged;
    $("paySub").textContent=`${v.name} · ${dayLabel(mDay).toLowerCase()}, ${s[0]}:00 · скидка ${s[1]}% на весь счёт`;
    $("pay").classList.add("open");}
  else if(screen==="ok"){tab="bk";document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("sel",x.dataset.t==="bk"));go("bk");}};
@@ -660,7 +838,7 @@ $("psPay").onclick=async()=>{hap();const btn=$("psPay"),byPts=$("payPts").classL
    $("okDetails").innerHTML=`
     <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#${IC[v.cat]}"/></svg><div><b>${v.name}</b><small>${v.place} · ${DN[v.d]}</small></div></div>
     <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-clock"/></svg><div>${dayLabel(mDay)} (${dstr}), ${s[0]}:00–${s[0]+1}:00<small>приходите в течение окна</small></div></div>
-    <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-ticket"/></svg><div>Скидка −${s[1]}% на весь счёт<small>депозит ${DEP} ₽ ${byPts?"оплачен баллами":"зачтён"}</small></div></div>`;
+    <div class="info-row"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-ticket"/></svg><div>Скидка −${s[1]}% на весь счёт<small>${P.depositCharged?(byPts?`депозит ${DEP} ₽ оплачен баллами`:`депозит ${DEP} ₽ зачтён`):"бронь бесплатна"}</small></div></div>`;
    await loadBookings();
    await loadAvailability();dayRow();distRow();feed();
    $("pay").classList.remove("open");renderUp();go("ok");
