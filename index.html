@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light only">
 <meta name="supported-color-schemes" content="light">
 <title>Тихий Час — лучшие места Санкт-Петербурга в их тихие часы</title>
-<meta name="description" content="Рестораны, кофейни и салоны Санкт-Петербурга снижают цены на 25–50% в часы, когда у них свободно. Бронируйте тихий час онлайн.">
+<meta name="description" content="Рестораны, кофейни и салоны Санкт-Петербурга снижают цены на <!--p:discountRange-->25–50%<!--/p--> в часы, когда у них свободно. Бронируйте тихий час онлайн.">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -375,16 +375,6 @@ nav{position:sticky;top:0;z-index:80;transition:transform .28s cubic-bezier(.19,
 .empty{grid-column:1/-1;text-align:center;padding:56px 24px;border:1px dashed var(--line-2);border-radius:18px;font-family:var(--disp);font-style:italic;font-size:21px;color:var(--ink-soft)}
 
 /* ---------- QUOTES ---------- */
-.quotes{display:grid;grid-template-columns:1fr;gap:clamp(18px,2.2vw,24px)}
-@media(min-width:840px){.quotes{grid-template-columns:repeat(3,1fr)}}
-.quote{background:var(--espresso-2);border:1px solid var(--line-dk2);border-radius:18px;padding:clamp(22px,2.4vw,28px);display:flex;flex-direction:column;gap:18px;transition:transform .4s cubic-bezier(.19,1,.22,1),border-color .3s}
-.quote:hover{transform:translateY(-4px);border-color:#5A4732}
-.quote .qm{font-family:var(--disp);font-size:44px;line-height:.6;color:var(--honey);opacity:.55}
-.quote p{font-size:15.5px;color:var(--cream);line-height:1.6}
-.q-who{display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:16px;border-top:1px solid var(--line-dk2)}
-.q-who span.q-av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:17px;line-height:1;color:var(--espresso);background:linear-gradient(140deg,var(--honey-lt),var(--honey-d));flex:none}
-.q-who b{display:block;font-size:14px;color:#FDFBF7;font-weight:700}
-.q-who span{display:block;font-size:12.5px;color:var(--cream-dim)}
 
 /* ---------- BUSINESS ---------- */
 .biz-grid{display:grid;grid-template-columns:1fr;gap:clamp(30px,4vw,54px);align-items:start}
@@ -699,7 +689,7 @@ body.tabs-stuck .tabs{top:0}
   <div class="amb"></div>
   <div class="wrap hero-in">
     <div>
-      <span class="eyebrow">Санкт-Петербург · 14 районов</span>
+      <span class="eyebrow">Санкт-Петербург · <!--p:districts-->14<!--/p--> районов</span>
       <h1 style="margin-top:20px">
         <span class="ln"><span style="--i:0">У каждого места</span></span>
         <span class="ln"><span style="--i:1">есть свой <em>тихий час</em>.</span></span>
@@ -710,9 +700,9 @@ body.tabs-stuck .tabs{top:0}
         <a class="btn btn-out btn-lg" href="#biz">Я — заведение</a>
       </div>
       <div class="hero-tags">
-        <span class="tag"><b>14</b> районов города</span>
-        <span class="tag">депозит <b>99 ₽</b> в счёт</span>
-        <span class="tag">отмена за <b>3 часа</b></span>
+        <span class="tag"><b><!--p:districts-->14<!--/p--></b> районов города</span>
+        <span class="tag"><!--p:copy.heroTagPrice-->бронь <b>бесплатна</b><!--/p--></span>
+        <span class="tag">отмена за <b><!--p:cancelHours-->3 часа<!--/p--></b></span>
       </div>
     </div>
 
@@ -762,7 +752,7 @@ body.tabs-stuck .tabs{top:0}
         <span class="eyebrow">Свободно сейчас</span>
         <h2 style="margin-top:16px">Тихие окна<br>рядом с вами</h2>
       </div>
-      <p class="lead">Выберите район или смотрите весь город сразу. Скидка действует на весь счёт, депозит зачитывается в него же — на пилоте бронь бесплатная.</p>
+      <p class="lead"><!--p:copy.feedLead-->Выберите район или смотрите весь город сразу. Скидка 25–50% действует на весь счёт.<!--/p--></p>
     </div>
 
     <div class="dates rv" id="dates">
@@ -802,8 +792,8 @@ body.tabs-stuck .tabs{top:0}
     </div>
     <div class="steps">
       <article class="step rv"><div class="step-n">Шаг 01</div><div class="step-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#i-clock"/></svg></div><h3>Выбираете час</h3><p>Шкала дня показывает, где рядом сейчас тихий час и какая скидка действует — от 25 до 50% на весь счёт.</p></article>
-      <article class="step rv rv-d1"><div class="step-n">Шаг 02</div><div class="step-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bolt"/></svg></div><h3>Занимаете место</h3><p>Депозит 99 ₽ подтверждает бронь и целиком уходит в ваш счёт. Отмена более чем за 3 часа — деньги возвращаются сами.</p></article>
-      <article class="step rv rv-d2"><div class="step-n">Шаг 03</div><div class="step-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg></div><h3>Показываете код</h3><p>При входе в заведение называете код брони из личного кабинета. За вами закрепят столик и отметят в системе — заказывайте и ешьте со скидкой, платите как обычно, только меньше.</p></article>
+      <article class="step rv rv-d1"><div class="step-n">Шаг 02</div><div class="step-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bolt"/></svg></div><h3>Занимаете место</h3><p><!--p:copy.howStepBook-->Занимаете окно на сайте — место закрепляется за вами сразу, подтверждения ждать не нужно. Отмена бесплатна за 3 часа до визита.<!--/p--></p></article>
+      <article class="step rv rv-d2"><div class="step-n">Шаг 03</div><div class="step-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg></div><h3>Называете код</h3><p><!--p:copy.howStepRedeem-->При входе называете код брони — он есть в вашем личном кабинете. Сотрудник вводит его у себя, и визит отмечен. Если под рукой QR из кабинета, сотрудник может считать его камерой — код подставится сам.<!--/p--></p></article>
     </div>
   </div>
 </section>
@@ -835,7 +825,7 @@ body.tabs-stuck .tabs{top:0}
         <div class="claims">
           <div class="claim"><span class="ck"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg></span><div><b>Скидка считается от текущей цены заведения</b><span>Не от завышенного «прайса для акции» — от того же меню и тех же цен, что действуют для всех остальных гостей в это время. Это условие договора с каждым заведением. Проверяем тайными визитами — накрутка цен означает отключение.</span></div></div>
           <div class="claim"><span class="ck"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg></span><div><b>Вечерний пик остаётся по полной цене</b><span>Заведение само задаёт часы, глубину скидки и лимит мест. Вечер пятницы никто не распродаёт.</span></div></div>
-          <div class="claim"><span class="ck"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg></span><div><b>Никаких ваучеров и предоплат</b><span>Вы платите заведению напрямую и как обычно. У нас остаётся только депозит, который зачитывается в ваш счёт.</span></div></div>
+          <div class="claim"><span class="ck"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg></span><div><b>Никаких ваучеров и предоплат</b><span><!--p:copy.honestNoVouchers-->Вы платите заведению напрямую и как обычно. Мы не продаём ваучеры и не берём предоплату за услугу.<!--/p--></span></div></div>
         </div>
       </div>
       <div class="chart rv rv-d1">
@@ -848,36 +838,6 @@ body.tabs-stuck .tabs{top:0}
   </div>
 </section>
 
-<!-- ============ QUOTES ============ -->
-<section class="sec dark grain" id="quotes">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <div>
-        <span class="eyebrow">Говорят партнёры</span>
-        <h2 style="margin-top:16px">Что изменилось<br>в пустые часы</h2>
-      </div>
-      <p class="lead">Три заведения из первой волны пилота — о том, как выглядит тихий час изнутри.</p>
-    </div>
-    <div class="quotes">
-      <figure class="quote rv">
-        <div class="qm">“</div>
-        <p>Раньше с двух до пяти в будни зал стоял пустой, а повар и официант всё равно на смене. Сейчас в это окно приходит по четыре-пять столов. Даже с минус тридцать это чистая прибавка.</p>
-        <figcaption class="q-who"><span class="q-av">К</span><div><b>Кирилл Ветров</b><span>управляющий, «Киото бар»</span></div></figcaption>
-      </figure>
-      <figure class="quote rv rv-d1">
-        <div class="qm">“</div>
-        <p>Мастера утром простаивали, а платить за аренду нужно всё равно. Половина тех, кто пришёл по тихому часу, записалась второй раз уже по полной цене — вот ради чего всё затевалось.</p>
-        <figcaption class="q-who"><span class="q-av">А</span><div><b>Анна Гурьева</b><span>владелица студии «Мята»</span></div></figcaption>
-      </figure>
-      <figure class="quote rv rv-d2">
-        <div class="qm">“</div>
-        <p>Что подкупило — платишь только за тех, кто реально пришёл, и видно каждого гостя. С купонными сервисами так не было никогда: там просто списывали процент и пропадали.</p>
-        <figcaption class="q-who"><span class="q-av">Д</span><div><b>Денис Лапин</b><span>совладелец, «Квест Хаус»</span></div></figcaption>
-      </figure>
-    </div>
-  </div>
-</section>
-
 <!-- ============ BUSINESS ============ -->
 <section class="sec dark grain" id="biz" style="background:var(--espresso-2)">
   <div class="wrap">
@@ -886,13 +846,13 @@ body.tabs-stuck .tabs{top:0}
         <span class="eyebrow">Заведениям</span>
         <h2 style="margin-top:16px">Заполните<br>пустые часы</h2>
       </div>
-      <p class="lead">Трафик в общепите и услугах просел, издержки выросли. Мы приводим гостей ровно в те окна, которые у вас простаивают, и берём деньги только за состоявшийся визит.</p>
+      <p class="lead"><!--p:copy.bizLead-->Трафик в общепите и услугах просел, издержки выросли. Мы приводим гостей ровно в те окна, которые у вас простаивают.<!--/p--></p>
     </div>
     <div class="biz-grid">
       <div class="rv">
-        <div class="promise"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div><b>Платите за факт</b><span>99 ₽ за пришедшего гостя — единая ставка во всех категориях. Только за первые два визита — дальше гость ваш бесплатно.</span></div></div>
-        <div class="promise"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#i-shield"/></svg></span><div><b>Пик не трогаем</b><span>Вы задаёте окна, глубину скидки и лимит мест на акцию. Полный контроль загрузки остаётся у вас.</span></div></div>
-        <div class="promise"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bolt"/></svg></span><div><b>Расчёты день в день</b><span>Депозиты приходят на следующий рабочий день, отчёт агента и акты формируются автоматически.</span></div></div>
+        <div class="promise"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div><b>Комиссию платит гость</b><span><!--p:copy.bizPayForFact-->Платформа берёт 99 ₽ с гостя за бронь — это наша комиссия, и она остаётся у нас. Вы не платите нам за визит и не получаете от нас переводов. Пока приём оплаты подключается, деньги с гостя не списываются и скидывать 99 ₽ со счёта не нужно — гостю достаётся только ваша процентная скидка.<!--/p--></span></div></div>
+        <div class="promise"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#i-shield"/></svg></span><div><b>Пик не трогаем</b><span><!--p:copy.bizControl-->Вы задаёте окна, глубину скидки и лимит мест на акцию. Полный контроль загрузки остаётся у вас.<!--/p--></span></div></div>
+        <div class="promise"><span class="pi"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bolt"/></svg></span><div><b>Взаимных переводов нет</b><span><!--p:copy.bizNoTransfers-->Взаимных переводов нет. Мы ничего вам не перечисляем и ничего с вас не списываем: наша выручка — комиссия гостя, ваша выгода — заполненный зал в час, который иначе простаивал бы.<!--/p--></span></div></div>
         <div style="margin-top:30px">
           <a class="btn btn-honey btn-lg" href="#join">Зарегистрировать заведение <svg class="ic" viewBox="0 0 24 24"><use href="#i-arrow"/></svg></a>
           <p style="margin-top:15px;font-size:13.5px;color:var(--cream-dim);max-width:44ch;line-height:1.6">Регистрация занимает две минуты. Авторизуем площадку в течение 24 часов — дальше вы всё настраиваете сами.</p>
@@ -909,10 +869,10 @@ body.tabs-stuck .tabs{top:0}
           <div class="co"><span>Заполненных визитов в месяц</span><b id="cVisits">—</b></div>
           <div class="co"><span>Прибыль с этих визитов</span><b id="cGross">—</b></div>
           <div class="co"><span>Вернулись потом по полной цене</span><b id="cRet">—</b></div>
-          <div class="co"><span>Стоимость сервиса</span><b id="cCost">—</b></div>
+          <div class="co"><span><!--p:copy.calcCostLabel-->Подписка за месяц<!--/p--></span><b id="cCost">—</b></div>
           <div class="co tot"><span>Чистая выгода в месяц</span><b id="cNet">—</b></div>
         </div>
-        <div class="cfine">Расчёт по фудкосту 32%, тариф «Стандарт» 4 990 ₽ и комиссия 99 ₽ за визит.</div>
+        <div class="cfine"><!--p:copy.calcFine-->Расчёт по фудкосту 32% и тарифу «Стандарт» 4 990 ₽ в месяц. Комиссию за визит платит гость, в расходы заведения она не входит.<!--/p--></div>
       </div>
     </div>
   </div>
@@ -944,7 +904,7 @@ body.tabs-stuck .tabs{top:0}
           <div><b>Кабинет</b><span>Добавляете фото, задаёте тихие окна, глубину скидки и лимит мест. Меняете в любой момент сами.</span></div>
         </div>
         <div class="jf-note">
-          <b>Первый месяц бесплатно.</b> Дальше подписка от 2 990 ₽ и фикс 99 ₽ за пришедшего гостя. Отключиться можно в один клик.
+          <!--p:copy.joinNote-->Первый месяц бесплатно. Дальше подписка от 2 990 ₽ в месяц за точку — и всё: за визиты вы нам не платите, переводов между нами нет. Отключиться можно в один клик.<!--/p-->
         </div>
       </div>
 
@@ -1035,44 +995,30 @@ body.tabs-stuck .tabs{top:0}
         <span class="eyebrow">Тарифы</span>
         <h2 style="margin-top:16px">Подписка окупается<br>одним столиком</h2>
       </div>
-      <p class="lead">Подписка за доступ к платформе плюс фикс за пришедшего гостя. Никаких процентов с оборота и предоплаченных ваучеров.</p>
+      <p class="lead"><!--p:copy.plansLead-->Подписка за доступ к платформе — и всё. За визиты вы нам не платите: комиссию за бронь платит гость. Никаких процентов с оборота, предоплаченных ваучеров и переводов между нами.<!--/p--></p>
     </div>
     <div class="plans">
       <article class="plan rv">
-        <div class="pname">Старт</div>
-        <div class="price">2 990 ₽<s>в месяц за точку</s></div>
-        <ul>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>До 20 визитов в месяц</li>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Одно тихое окно</li>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Выплаты день в день</li>
-        </ul>
+        <div class="pname"><!--p:plan.start.name-->Старт<!--/p--></div>
+        <div class="price"><!--p:plan.start.price-->2 990 ₽<!--/p--><s><!--p:plan.start.note-->в месяц за точку<!--/p--></s></div>
+        <ul><!--p:plan.start.features--><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>До 20 визитов в месяц</li><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Одно тихое окно</li><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Экран броней на телефоне сотрудника</li><!--/p--></ul>
         <a class="btn btn-out-d" href="/login.html?role=partner">Попробовать</a>
       </article>
       <article class="plan hi rv rv-d1">
         <span class="badge">Выбирают 60%</span>
-        <div class="pname">Стандарт</div>
-        <div class="price">4 990 ₽<s>первый месяц — 1 ₽</s></div>
-        <ul>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>До 80 визитов в месяц</li>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Окна и скидки по дням недели</li>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Аналитика загрузки</li>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Приоритет в ленте района</li>
-        </ul>
+        <div class="pname"><!--p:plan.standard.name-->Стандарт<!--/p--></div>
+        <div class="price"><!--p:plan.standard.price-->4 990 ₽<!--/p--><s><!--p:plan.standard.note-->первый месяц бесплатно<!--/p--></s></div>
+        <ul><!--p:plan.standard.features--><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>До 80 визитов в месяц</li><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Окна и скидки по дням недели</li><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Аналитика загрузки</li><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Приоритет в ленте района</li><!--/p--></ul>
         <a class="btn btn-honey" href="/login.html?role=partner">Подключить пилот</a>
       </article>
       <article class="plan rv rv-d2">
-        <div class="pname">Про</div>
-        <div class="price">8 990 ₽<s>в месяц за точку</s></div>
-        <ul>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Безлимит визитов</li>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Топ-размещение в ленте</li>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Персональный менеджер</li>
-          <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Интеграция с кассой</li>
-        </ul>
+        <div class="pname"><!--p:plan.pro.name-->Про<!--/p--></div>
+        <div class="price"><!--p:plan.pro.price-->8 990 ₽<!--/p--><s><!--p:plan.pro.note-->в месяц за точку<!--/p--></s></div>
+        <ul><!--p:plan.pro.features--><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Безлимит визитов</li><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Топ-размещение в ленте</li><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Персональный менеджер</li><li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>Интеграция с кассой</li><!--/p--></ul>
         <a class="btn btn-out-d" href="/login.html?role=partner">Обсудить</a>
       </article>
     </div>
-    <p class="fee rv">Плюс комиссия за пришедшего гостя: <b>99 ₽</b> — единая ставка во всех категориях. Списывается только за первый и второй визит: с третьего этот гость для вас бесплатен навсегда.</p>
+    <p class="fee rv"><!--p:copy.planFee-->Как мы зарабатываем: 99 ₽ с гостя за бронь — это комиссия платформы, её платит гость, а не вы. Ни выплат, ни удержаний между нами нет. Пока приём оплаты подключается, комиссия не берётся и скидка 99 ₽ к счёту не нужна.<!--/p--></p>
   </div>
 </section>
 
@@ -1087,13 +1033,13 @@ body.tabs-stuck .tabs{top:0}
       <p class="lead">Если что-то осталось непонятным — напишите нам в Telegram, отвечаем живыми словами, а не шаблонами.</p>
     </div>
     <div class="faq rv">
-      <details><summary>Депозит 99 ₽ — это доплата сверху?<span class="x"></span></summary><div class="ans">Нет. Депозит зачитывается в счёт при визите: заплатили 99 ₽ при брони — на столько меньше отдаёте на месте. Он нужен, чтобы брони были настоящими и места не простаивали зря. На пилоте бронь бесплатная.</div></details>
-      <details><summary>Что будет, если я не смогу прийти?<span class="x"></span></summary><div class="ans">Отмените бронь более чем за три часа — депозит вернётся автоматически тем же способом оплаты. При неявке без отмены депозит удерживается, половина уходит заведению как компенсация простоя.</div></details>
-      <details><summary>Как именно проходит визит по тихому часу?<span class="x"></span></summary><div class="ans">Вы бронируете окно на сайте и вносите депозит 99 ₽. При входе в заведение показываете QR-код брони администратору — за вами сразу закрепляют столик и отмечают визит в системе. Дальше всё как обычно: заказываете, едите, отдыхаете. Скидка считается от той же цены, что действует в это время для всех остальных гостей — никакого отдельного завышенного прайса нет. Когда приносят счёт, скидка уже применена ко всему заказу, депозит зачтён — доплачиваете только разницу.</div></details>
-      <details><summary>Чем это отличается от купонов?<span class="x"></span></summary><div class="ans">Мы не продаём ваучеры и не берём предоплату за услугу. Вы платите заведению напрямую, как обычно, только меньше. Заведение получает деньги день в день и не платит процент с оборота — поэтому ему незачем отбивать скидку накруткой цен.</div></details>
-      <details><summary>Почему скидки только днём и в будни?<span class="x"></span></summary><div class="ans">Потому что это честная экономика, а не разовая акция. В тихие часы у заведения простаивают уже оплаченные столы и мастера, и любой гость с маржой выше себестоимости — прибавка к прибыли. Вечером зал полон и без нас.</div></details>
-      <details><summary>Я заведение. Сколько это стоит и как быстро подключиться?<span class="x"></span></summary><div class="ans">Пилотный месяц бесплатно, дальше подписка от 2 990 ₽ и фикс 99 ₽ за пришедшего гостя — единая ставка во всех категориях. Онбординг занимает двадцать минут: задаёте окна, глубину скидки и лимит мест — заявки начинают приходить в тот же день.</div></details>
-      <details><summary>Когда запуск в Москве?<span class="x"></span></summary><div class="ans">Сейчас работаем по Санкт-Петербургу — заведения есть в четырнадцати районах. Москва в планах на этот год — напишите нам, если у вас заведение в Москве, позовём в раннюю волну на особых условиях.</div></details>
+      <details><summary><!--p:copy.faqDepositQ-->Бронь платная?<!--/p--><span class="x"></span></summary><div class="ans"><!--p:copy.faqDepositA-->Сейчас нет — приём оплаты подключается, деньги за бронь не списываются. Вы платите в заведении как обычно, только со скидкой тихого часа. Когда оплата заработает, бронь будет стоить 99 ₽: это комиссия сервиса, и заведение скинет ровно столько же с вашего счёта — то есть в вашем кошельке не изменится ничего.<!--/p--></div></details>
+      <details><summary><!--p:copy.faqNoShowQ-->Что будет, если я не смогу прийти?<!--/p--><span class="x"></span></summary><div class="ans"><!--p:copy.faqNoShowA-->Отмените бронь в личном кабинете — это бесплатно и ничем не грозит. Если не пришли и не отменили, ничего не списывается, но заведение держало для вас место: отменяйте, пожалуйста, заранее.<!--/p--></div></details>
+      <details><summary><!--p:copy.faqVisitQ-->Как именно проходит визит по тихому часу?<!--/p--><span class="x"></span></summary><div class="ans"><!--p:copy.faqVisitA-->Вы бронируете окно на сайте и получаете короткий код. При входе называете его администратору — тот вводит код у себя, и визит отмечен. Если ваш телефон под рукой, можно вместо этого показать QR из кабинета: сотрудник считает его камерой, и код подставится сам. Дальше всё как обычно: заказываете, едите, отдыхаете. Скидка считается от той же цены, что действует в это время для всех остальных гостей — никакого отдельного завышенного прайса нет. Когда приносят счёт, скидка уже применена ко всему заказу.<!--/p--></div></details>
+      <details><summary><!--p:copy.faqCouponsQ-->Чем это отличается от купонов?<!--/p--><span class="x"></span></summary><div class="ans"><!--p:copy.faqCouponsA-->Мы не продаём ваучеры и не берём предоплату за услугу. Вы платите заведению напрямую, как обычно, только меньше. Заведение не платит нам процент с оборота — поэтому ему незачем отбивать скидку накруткой цен.<!--/p--></div></details>
+      <details><summary><!--p:copy.faqWhyDayQ-->Почему скидки только днём и в будни?<!--/p--><span class="x"></span></summary><div class="ans"><!--p:copy.faqWhyDayA-->Потому что это честная экономика, а не разовая акция. В тихие часы у заведения простаивают уже оплаченные столы и мастера, и любой гость с маржой выше себестоимости — прибавка к прибыли. Вечером зал полон и без нас.<!--/p--></div></details>
+      <details><summary><!--p:copy.faqVenueQ-->Я заведение. Сколько это стоит и как быстро подключиться?<!--/p--><span class="x"></span></summary><div class="ans"><!--p:copy.faqVenueA-->Первый месяц бесплатно, дальше подписка от 2 990 ₽ в месяц за точку. За визиты вы нам не платите и переводов между нами нет: комиссию 99 ₽ будет платить гость, когда мы подключим приём оплаты. Онбординг занимает двадцать минут: задаёте окна, глубину скидки и лимит мест.<!--/p--></div></details>
+      <details><summary><!--p:copy.faqMoscowQ-->Когда запуск в Москве?<!--/p--><span class="x"></span></summary><div class="ans"><!--p:copy.faqMoscowA-->Сейчас работаем по Санкт-Петербургу — 14 районов города. Москва в планах на этот год: напишите нам, если у вас заведение в Москве, позовём в раннюю волну на особых условиях.<!--/p--></div></details>
     </div>
   </div>
 </section>
@@ -1148,8 +1094,8 @@ body.tabs-stuck .tabs{top:0}
         <div class="sh-slots" id="shSlots"></div>
         <div class="sh-line"><span>Когда</span><b id="shWhen">—</b></div>
         <div class="sh-line"><span>Скидка на весь счёт</span><b id="shOff">—</b></div>
-        <div class="sh-line"><span>Депозит за бронь</span><b>99 ₽</b></div>
-        <div class="sh-fine">Депозит зачитывается в счёт. Отмена более чем за три часа — возврат автоматически. На пилоте бронь бесплатная.</div>
+        <div class="sh-line"><span><!--p:copy.sheetPriceLabel-->Бронь<!--/p--></span><b><!--p:copy.sheetPriceValue-->бесплатно<!--/p--></b></div>
+        <div class="sh-fine"><!--p:copy.sheetFine-->Отмена бесплатна за 3 часа до визита. Скидка тихого часа применяется к счёту в заведении.<!--/p--></div>
         <button class="btn btn-honey btn-lg sh-btn" id="shBook">Забронировать место</button>
       </div>
       <div class="sh-ok" id="shOk">
@@ -1157,7 +1103,6 @@ body.tabs-stuck .tabs{top:0}
         <div class="sh-lbl" style="margin-bottom:6px">Код брони</div>
         <div class="sh-code" id="shCode">ТЧ-0000</div>
         <div class="sh-sum" id="shSum">—</div>
-        <div class="sh-testnote">Депозит 99 ₽ · тестовый режим, оплата не списывается</div>
         <div class="sh-fine">При входе покажите этот код — за вами закрепят столик и отметят в системе, скидка будет применена ко всему счёту.</div>
         <button class="btn btn-ink btn-lg sh-btn" id="shDone">Готово</button>
       </div>
@@ -1177,11 +1122,13 @@ body.tabs-stuck .tabs{top:0}
   <img id="lbImg" alt="">
 </div>
 
+<script src="/content/product.js"></script>
 <script type="application/json" id="venues-seed">
 [{"cat":"food","d":"petro","name":"Киото бар","rate":"чек ~1 800 ₽","place":"суши · Большой пр. П.С.","left":"осталось 4 стола","wd":[1,2,3,4,5],"slots":[[15,40],[16,40],[17,30]]},{"cat":"coffee","d":"petro","name":"Крем","rate":"чек ~700 ₽","place":"кофейня · Большая Монетная","left":"6 мест у окна","wd":[0,1,2,3,4,5,6],"slots":[[10,30],[11,30]]},{"cat":"food","d":"petro","name":"Тбилисо","rate":"чек ~1 600 ₽","place":"грузинская · Кронверкский пр.","left":"осталось 5 столов","wd":[1,2,3,4,5],"slots":[[14,35],[15,35],[16,35]]},{"cat":"beauty","d":"petro","name":"Мята","rate":"чек ~1 500 ₽","place":"маникюр · Каменноостровский пр.","left":"3 окна у мастеров","wd":[1,2,3,4,5,6],"slots":[[11,35],[12,35],[13,35]]},{"cat":"beauty","d":"petro","name":"Право.","rate":"чек ~1 200 ₽","place":"барбершоп · Большой пр. П.С.","left":"2 кресла свободно","wd":[1,2,3,4,5,6],"slots":[[12,30],[13,30],[14,30]]},{"cat":"spa","d":"petro","name":"Пар","rate":"чек ~2 500 ₽","place":"спа и массаж · Чкаловская наб.","left":"4 слота сегодня","wd":[0,1,2,3,4,5,6],"slots":[[12,40],[14,40],[15,40]]},{"cat":"fun","d":"petro","name":"Квест Хаус","rate":"1 900 ₽ команда","place":"квесты · Петроградская наб.","left":"3 слота на сегодня","wd":[0,1,2,3,4,5,6],"slots":[[12,50],[14,50],[16,50]]},{"cat":"food","d":"centr","name":"Вход с Рубинштейна","rate":"чек ~2 000 ₽","place":"европейская · ул. Рубинштейна","left":"осталось 6 столов","wd":[1,2,3,4],"slots":[[13,35],[14,35],[15,40]]},{"cat":"coffee","d":"centr","name":"Полторы комнаты","rate":"чек ~650 ₽","place":"кофейня · Литейный пр.","left":"8 мест","wd":[0,1,2,3,4,5,6],"slots":[[10,25],[11,30],[12,30]]},{"cat":"beauty","d":"centr","name":"Фонтанка Nails","rate":"чек ~1 600 ₽","place":"маникюр · наб. Фонтанки","left":"4 окна у мастеров","wd":[1,2,3,4,5,6],"slots":[[12,35],[13,35],[16,30]]},{"cat":"fun","d":"centr","name":"Лофт-квест","rate":"1 700 ₽ команда","place":"квесты · Лиговский пр.","left":"2 слота","wd":[0,1,2,3,4,5,6],"slots":[[14,45],[16,50]]},{"cat":"food","d":"adm","name":"Сенная 12","rate":"чек ~1 100 ₽","place":"бистро · Сенная площадь","left":"осталось 9 столов","wd":[1,2,3,4,5],"slots":[[12,30],[13,35],[14,35]]},{"cat":"spa","d":"adm","name":"Банный день","rate":"чек ~2 200 ₽","place":"спа · Измайловский пр.","left":"3 слота","wd":[0,1,2,3,4,5,6],"slots":[[11,40],[13,40],[15,35]]},{"cat":"auto","d":"adm","name":"Мойка на Обводном","rate":"чек ~1 300 ₽","place":"автомойка · Обводный канал","left":"без очереди","wd":[1,2,3,4,5,6],"slots":[[10,30],[12,30],[14,25]]},{"cat":"coffee","d":"vasil","name":"Гавань","rate":"чек ~700 ₽","place":"кофейня · Большой пр. В.О.","left":"5 мест у окна","wd":[1,2,3,4,5,6],"slots":[[10,30],[11,25],[15,30]]},{"cat":"food","d":"vasil","name":"Линия 7","rate":"чек ~1 400 ₽","place":"паста · 7-я линия В.О.","left":"осталось 4 стола","wd":[1,2,3,4,5],"slots":[[14,40],[15,40],[16,35]]},{"cat":"beauty","d":"vasil","name":"Штиль","rate":"чек ~1 100 ₽","place":"барбершоп · Средний пр. В.О.","left":"2 кресла","wd":[1,2,3,4,5,6],"slots":[[11,30],[12,30],[13,30]]},{"cat":"food","d":"mosk","name":"Меридиан","rate":"чек ~1 500 ₽","place":"грузинская · Московский пр.","left":"осталось 7 столов","wd":[1,2,3,4,5],"slots":[[13,35],[15,40],[16,40]]},{"cat":"spa","d":"mosk","name":"Тихая вода","rate":"чек ~2 300 ₽","place":"массаж · Звёздная","left":"4 слота сегодня","wd":[0,1,2,3,4,5,6],"slots":[[12,40],[14,40]]},{"cat":"auto","d":"mosk","name":"Детейлинг Пулково","rate":"чек ~3 500 ₽","place":"детейлинг · Пулковское ш.","left":"2 поста","wd":[1,2,3,4,5],"slots":[[11,30],[13,30]]},{"cat":"food","d":"nev","name":"Дыбенко Кухня","rate":"чек ~900 ₽","place":"азиатская · пр. Большевиков","left":"осталось 8 столов","wd":[1,2,3,4,5],"slots":[[12,35],[14,40],[16,35]]},{"cat":"beauty","d":"nev","name":"Невский Стиль","rate":"чек ~1 400 ₽","place":"салон · ул. Дыбенко","left":"5 окон","wd":[1,2,3,4,5,6],"slots":[[10,35],[11,35],[13,30]]},{"cat":"coffee","d":"primor","name":"Комендантский","rate":"чек ~650 ₽","place":"кофейня · Комендантский пр.","left":"6 мест","wd":[0,1,2,3,4,5,6],"slots":[[10,30],[11,30],[14,25]]},{"cat":"fun","d":"primor","name":"Картинг Приморский","rate":"2 200 ₽","place":"картинг · Планерная","left":"4 слота","wd":[0,1,2,3,4,5,6],"slots":[[13,45],[15,50]]},{"cat":"beauty","d":"primor","name":"Ольга Студия","rate":"чек ~1 500 ₽","place":"маникюр · Богатырский пр.","left":"3 окна","wd":[1,2,3,4,5,6],"slots":[[11,35],[12,35],[15,30]]},{"cat":"food","d":"vyb","name":"Просвещения 40","rate":"чек ~1 000 ₽","place":"бургеры · пр. Просвещения","left":"осталось 6 столов","wd":[1,2,3,4,5],"slots":[[13,35],[14,35],[17,30]]},{"cat":"auto","d":"vyb","name":"Мойка Озерки","rate":"чек ~1 200 ₽","place":"автомойка · Озерки","left":"без очереди","wd":[1,2,3,4,5,6],"slots":[[10,30],[12,30],[14,30]]},{"cat":"coffee","d":"kalin","name":"Академка","rate":"чек ~600 ₽","place":"кофейня · Академическая","left":"7 мест","wd":[1,2,3,4,5,6],"slots":[[10,30],[11,30]]},{"cat":"beauty","d":"kalin","name":"Мурино Beauty","rate":"чек ~1 300 ₽","place":"салон · Гражданский пр.","left":"4 окна","wd":[1,2,3,4,5,6],"slots":[[12,35],[13,35],[16,30]]},{"cat":"food","d":"kirov","name":"Нарвская 5","rate":"чек ~900 ₽","place":"домашняя кухня · Нарвская","left":"осталось 5 столов","wd":[1,2,3,4,5],"slots":[[12,35],[13,35],[15,35]]},{"cat":"spa","d":"frunz","name":"Купчино Спа","rate":"чек ~2 000 ₽","place":"спа · Бухарестская","left":"3 слота","wd":[0,1,2,3,4,5,6],"slots":[[11,40],[14,40]]},{"cat":"food","d":"krasnog","name":"Охта Гриль","rate":"чек ~1 300 ₽","place":"гриль · Охта","left":"осталось 6 столов","wd":[1,2,3,4,5,6],"slots":[[14,35],[16,40]]},{"cat":"beauty","d":"krasnos","name":"Ветеранов Nails","rate":"чек ~1 200 ₽","place":"маникюр · пр. Ветеранов","left":"4 окна","wd":[1,2,3,4,5,6],"slots":[[11,35],[13,35]]},{"cat":"coffee","d":"push","name":"Царское зерно","rate":"чек ~650 ₽","place":"кофейня · Пушкин","left":"5 мест","wd":[0,1,2,3,4,5,6],"slots":[[10,30],[12,30],[15,25]]},{"cat":"auto","d":"petro","name":"Мойка 24","rate":"","place":"автомойка · Петроградская","left":"","wd":[1,2,3,4,5],"slots":[[12,30],[14,30],[16,25]]},{"cat":"food","d":"petro","name":"Аоаоал","rate":"","place":"Ресторан / кафе · Слаллс","left":"уточняйте в заведении","wd":[1,2,3,4,5],"slots":[[12,30]],"photo":"/api/guest/venue-photo/37?w=500&v=1787645512","photos":1},{"cat":"food","d":"kalin","name":"Полянка","rate":"","place":"Ресторан / кафе · Калининский 1","left":"уточняйте в заведении","wd":[0,1,2,3,4,5,6],"slots":[[11,30],[12,30],[13,30],[14,30]],"photo":"/api/guest/venue-photo/39?w=500&v=1788336470","photos":1}]
 </script>
 <script>
 const $=id=>document.getElementById(id);
+const P=window.PRODUCT;   /* content/product.json */
 const HOURS=[10,11,12,13,14,15,16,17,18,19,20,21];
 const OFF={10:25,11:30,12:20,13:15,14:30,15:40,16:40,17:35,18:20,19:0,20:0,21:15};
 const LOAD={10:32,11:38,12:26,13:20,14:36,15:46,16:48,17:42,18:26,19:88,20:92,21:24};
@@ -1664,15 +1611,20 @@ $("shBook").onclick=async ()=>{
 /* ---- calculator ---- */
 const rub=n=>n.toLocaleString("ru-RU")+" ₽";
 function calc(){
+  /* Все ставки — из content/product.json, руками тут ничего не задаётся. */
+  const C=P.calc, plan=P.plans.find(x=>x.id==="standard")||P.plans[0];
+  const food=C.foodCostPct/100, extra=C.servicePerVisitFee;
   const seats=+$("rSeats").value,check=+$("rCheck").value,disc=+$("rDisc").value/100;
   $("oSeats").textContent=seats;
   $("oCheck").textContent=check.toLocaleString("ru-RU")+" ₽";
   $("oDisc").textContent=Math.round(disc*100)+"%";
-  const visits=Math.round(seats*22*0.32);
-  const per=Math.max(0,check*(1-disc)-check*0.32-40);
+  const visits=Math.round(seats*C.workdaysPerMonth*(C.fillRatePct/100));
+  const per=Math.max(0,check*(1-disc)-check*food-extra);
   const gross=Math.round(visits*per);
-  const ret=Math.round(visits*0.25*(check-check*0.32-40));
-  const cost=4990+visits*99;
+  const ret=Math.round(visits*(C.returnRatePct/100)*(check-check*food-extra));
+  /* Заведение платит только подписку. Комиссию за бронь платит гость.
+     Скидка к счёту появляется у заведения лишь когда оплата подключена. */
+  const cost=plan.price+(P.depositCharged?visits*P.venueBillDiscount:0);
   const net=gross+ret-cost;
   $("cVisits").textContent=visits;
   $("cGross").textContent="+"+rub(gross);

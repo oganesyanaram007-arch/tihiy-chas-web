@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
 <title>Тихий Час — Кабинет партнёра</title>
+<script src="/content/product.js"></script>
 <script>window.TG_SDK={done:false};</script>
 <script async src="https://telegram.org/js/telegram-web-app.js"
         onload="window.TG_SDK.done=true" onerror="window.TG_SDK.done=true"></script>
@@ -409,7 +410,7 @@ input[type=file]{display:none}
         </div>
         <div class="sect-cap" style="padding-top:0">Условия пилота</div>
         <div class="review-card" style="font-size:13px;color:var(--ink-soft);line-height:1.6">
-          Первый месяц бесплатно. Дальше подписка от 2 990 ₽ и фикс 99 ₽ за пришедшего гостя — только за первые два визита, дальше бесплатно.
+          <!--p:copy.cabinetFee-->Первый месяц бесплатно. Дальше подписка от 2 990 ₽ в месяц за точку. За визиты вы нам не платите: комиссию платит гость.<!--/p-->
         </div>
       </section>
 
@@ -1177,7 +1178,14 @@ let tt;function toast(m,isErr){const t=$("toast");t.textContent=m;t.className="t
 /* ---------- clock ---------- */
 /* Часы жили в имитации строки статуса телефона — её больше нет. */
 $("cabLogout").onclick=async()=>{
-  try{ await fetch("/api/auth/logout",{method:"POST",credentials:"same-origin"}); }catch(e){}
+  /* В кабинет пускают по двум разным кукам: tc_cab выдаёт бот по ссылке,
+     tc_web — вход с сайта. Раньше гасилась только вторая, и партнёр,
+     зашедший из бота, оставался в системе ещё семь суток: следующий
+     человек на том же устройстве открывал кабинет как владелец.
+     Гасим обе и ждём завершения, чтобы уход со страницы не оборвал
+     запросы на полпути. */
+  const kill = u => fetch(u, {method:"POST", credentials:"same-origin"}).catch(()=>{});
+  await Promise.allSettled([ kill("/api/cab/logout"), kill("/api/auth/logout") ]);
   location.href="/";
 };
 
