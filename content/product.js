@@ -11,6 +11,8 @@ window.PRODUCT = {
   "cancelFreeHours": 3,
   "noShowPolicy": "none",
   "redeemPrimary": "code",
+  "codeLength": 6,
+  "codeAlphabet": "23456789ABCDEFGHJKMNPQRSTVWXYZ",
   "districts": 14,
   "plans": [
     {

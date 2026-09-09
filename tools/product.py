@@ -121,6 +121,8 @@ def render_map(p: dict) -> dict:
     out = {f"copy.{k}": s for k, s in copy(p).items()}
     for k, s in values(p).items():
         out[k] = s
+    out["code.example"] = "".join(p["code"]["alphabet"][i % len(p["code"]["alphabet"])]
+                                  for i in (7, 19, 2, 25, 11, 4))
     for it in p["plans"]["items"]:
         out[f'plan.{it["id"]}.name'] = it["name"]
         out[f'plan.{it["id"]}.price'] = rub(it["price"])
@@ -149,6 +151,8 @@ def js(p: dict) -> str:
         "cancelFreeHours": p["booking"]["cancelFreeHours"],
         "noShowPolicy": p["booking"]["noShowPolicy"],
         "redeemPrimary": p["redeem"]["primary"],
+        "codeLength": p["code"]["length"],
+        "codeAlphabet": p["code"]["alphabet"],
         "districts": p["geo"]["districts"],
         "plans": p["plans"]["items"],
         "calc": {k: v for k, v in p["calc"].items() if not k.startswith("_")},
@@ -181,6 +185,9 @@ def py(p: dict) -> str:
         f'CANCEL_FREE_HOURS = {p["booking"]["cancelFreeHours"]}',
         f'NO_SHOW_POLICY = {p["booking"]["noShowPolicy"]!r}',
         f'REDEEM_PRIMARY = {p["redeem"]["primary"]!r}       # код — основное, QR — ускоритель',
+        f'CODE_LENGTH = {p["code"]["length"]}',
+        f'CODE_ALPHABET = {p["code"]["alphabet"]!r}',
+        f'CODE_LEGACY_PREFIX = {p["code"]["legacyPrefix"]!r}',
         f'DISTRICTS = {p["geo"]["districts"]}',
         f'SUPPORT_BOT = {p["support"]["telegramBot"]!r}',
         "",
