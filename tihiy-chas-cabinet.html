@@ -50,6 +50,22 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
   border-radius:9px;background:var(--err);color:#fff;font-size:10.5px;font-weight:700;
   display:grid;place-items:center;line-height:1}
 .tab{position:relative}
+/* ---------- смена: что происходит сегодня ---------- */
+.shift{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+       background:var(--porcelain);border:1px solid var(--line-lt);
+       border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.shift[hidden]{display:none}
+.sh-stat{display:flex;align-items:baseline;gap:7px}
+.sh-stat b{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--ink)}
+.sh-stat span{font-size:12.5px;color:var(--ink-soft)}
+.sh-date{margin-left:auto;font-size:12.5px;color:var(--ink-soft)}
+/* Партнёр заблокировал бота: пусть видит, почему «ничего не приходит»,
+   и что брони при этом на месте. */
+.sh-warn{background:rgba(223,166,60,.14);border:1px solid rgba(223,166,60,.4);
+         border-radius:12px;padding:11px 13px;font-size:13px;line-height:1.5;
+         color:var(--ink);margin-bottom:10px}
+.sh-warn[hidden]{display:none}
+
 /* ---------- погашение кода на входе ---------- */
 .rd{background:var(--porcelain);border:1px solid var(--line-lt);border-radius:16px;
     padding:14px;margin-bottom:16px}
@@ -336,8 +352,18 @@ input[type=file]{display:none}
           </div>
         </div>
 
+        <!-- Смена: сколько гостей ждём и сколько уже пришло. Это источник
+             правды для персонала, а не уведомление в мессенджере. -->
+        <div class="shift" id="shift" hidden>
+          <div class="sh-stat"><b id="shWait">0</b><span>ждём сегодня</span></div>
+          <div class="sh-stat"><b id="shCame">0</b><span>уже пришли</span></div>
+          <div class="sh-date" id="shDate">—</div>
+        </div>
+        <div class="sh-warn" id="shWarn" hidden></div>
+
         <div class="bk-tabs">
-          <button class="bk-tab on" data-f="up">Ближайшие</button>
+          <button class="bk-tab on" data-f="today">Сегодня</button>
+          <button class="bk-tab" data-f="up">Ближайшие</button>
           <button class="bk-tab" data-f="past">Прошедшие</button>
         </div>
         <div id="bkList"></div>
@@ -844,7 +870,7 @@ $("pfSave").onclick=async()=>{
 };
 
 /* ---------- брони ---------- */
-let BK=[], bkFilter="up";
+let BK=[], bkFilter="today";
 const BK_ST={active:"Ждём гостя",visited:"Визит подтверждён",cancelled:"Отменена"};
 
 function fmtBkDate(iso){
@@ -852,8 +878,30 @@ function fmtBkDate(iso){
   return d.toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
 }
 
+/* Экран смены: отдельная ручка, потому что у входа нужны только
+   сегодняшние брони и по времени, а не двести записей за все даты. */
+let TODAY=null;
+async function refreshToday(){
+  try{
+    TODAY=await api("/api/cab/bookings/today");
+  }catch(e){ TODAY=null; return; }
+  const has=!!TODAY;
+  $("shift").hidden=!has;
+  if(!has) return;
+  $("shWait").textContent=TODAY.waiting;
+  $("shCame").textContent=TODAY.arrived;
+  $("shDate").textContent=fmtBkDate(TODAY.date);
+  const warn=$("shWarn");
+  if(TODAY.notifications_blocked){
+    warn.textContent="Уведомления в Telegram не доходят: бот заблокирован. "
+      + "Брони это не ломает — они все здесь, на этом экране.";
+    warn.hidden=false;
+  } else warn.hidden=true;
+}
+
 async function refreshBookings(){
   try{
+    await refreshToday();
     const data=await api("/api/cab/bookings");
     BK=data.bookings||[];
     [$("bkBadge"),$("bkBadge2")].forEach(x=>{
@@ -867,13 +915,18 @@ async function refreshBookings(){
 
 function renderBookings(){
   const box=$("bkList");box.innerHTML="";
-  const list=BK.filter(b=>bkFilter==="up" ? b.upcoming : !b.upcoming);
-  $("bkSub").textContent = bkFilter==="up"
-    ? "Гости, записанные на тихие часы"
-    : "Прошедшие и отменённые брони";
+  $("shift").hidden = bkFilter!=="today" || !TODAY;
+  const list = bkFilter==="today"
+    ? ((TODAY && TODAY.bookings) || []).map(b=>({...b, date: TODAY.date}))
+    : BK.filter(b=>bkFilter==="up" ? b.upcoming : !b.upcoming);
+  $("bkSub").textContent = bkFilter==="today"
+    ? "Кто придёт сегодня — с кодами и временем"
+    : (bkFilter==="up" ? "Гости, записанные на тихие часы"
+                       : "Прошедшие и отменённые брони");
   if(!list.length){
     box.innerHTML=`<div class="empty-wrap"><div style="text-align:center;color:var(--ink-soft);font-family:var(--disp);font-style:italic;font-size:16px">${
-      bkFilter==="up" ? "Пока никто не забронировал" : "Здесь пока пусто"}</div></div>`;
+      bkFilter==="today" ? "Сегодня броней нет"
+      : (bkFilter==="up" ? "Пока никто не забронировал" : "Здесь пока пусто")}</div></div>`;
     return;
   }
   list.forEach(b=>{
@@ -881,7 +934,8 @@ function renderBookings(){
     el.innerHTML=`<div class="bk-hd">
         <div>
           <b>${b.venue_name}</b>
-          <div class="bk-when">${fmtBkDate(b.date)}, ${b.hour}:00 · −${b.discount}%</div>
+          <div class="bk-when">${b.when || (fmtBkDate(b.date)+", "+b.hour+":00")} · −${b.discount}%${
+            b.redeemed_at ? " · отмечен "+b.redeemed_at : ""}</div>
           <div class="bk-guest">${b.guest_name}${b.guest_phone?" · "+b.guest_phone:""}</div>
           <div class="bk-cd">${b.code}</div>
         </div>
