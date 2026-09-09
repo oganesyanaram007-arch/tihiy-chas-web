@@ -178,7 +178,7 @@ function card(b){
   return `<div class="bkc"><div class="bkc-hd"><div>
       <b>${b.venue.name}</b>
       <div class="bkc-m">${b.venue.place||""} · ${b.venue.district_name}</div>
-      <div class="bkc-m">${fmt(b.date)}, ${b.hour}:00 — скидка −${b.discount}%</div>
+      <div class="bkc-m">${b.when || (fmt(b.date) + ", " + b.hour + ":00")} — скидка −${b.discount}%</div>
       <div class="bkc-code">${b.code}</div>
     </div><span class="st ${b.status}">${ST[b.status]||b.status}</span></div>
     ${b.status==="active"&&b.upcoming?`<div class="bkc-hint">Назовите код на входе — сотрудник отметит визит.

@@ -886,7 +886,7 @@ function bkLine(b){
   return `<div class="bk-card"><div class="bk-top">
     <div class="bk-ic"><svg class="ic" viewBox="0 0 24 24"><use href="#${icon}"/></svg></div>
     <div><div class="bk-name">${b.venue.name}</div>
-    <div class="bk-when">${dstr} · ${b.hour}:00 · −${b.discount}% · ${b.code}</div></div>
+    <div class="bk-when">${b.when || (dstr + " · " + b.hour + ":00")} · −${b.discount}% · ${b.code}</div></div>
     <div class="bk-eta">${b.status==="cancelled"?"отменена":(b.status==="visited"?"посещено":"активна")}</div></div>
     ${b.status==="active"&&b.upcoming?`<div class="bk-save"><svg class="ic" viewBox="0 0 24 24"><use href="#ic-ticket"/></svg>Код называете на месте · <a href="#" data-qr="${b.id}" style="color:inherit;text-decoration:underline">показать QR</a> · <a href="#" data-cancel="${b.id}" style="color:inherit;text-decoration:underline">отменить</a></div><img class="qr bk-qr" data-qrimg="${b.id}" alt="QR-код брони" width="142" height="142" hidden>`:""}
   </div>`;
