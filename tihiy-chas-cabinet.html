@@ -88,6 +88,10 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
 .rd-scan .ic{width:18px;height:18px}
 .rd-scan[hidden]{display:none}
 .rd-hint{font-size:12.5px;color:var(--ink-soft);flex:1;min-width:140px}
+.rd-fail{width:100%;margin-top:10px;min-height:44px;border:1.5px dashed var(--line-lt);
+         border-radius:12px;background:transparent;color:var(--ink-soft);
+         font-weight:600;font-size:13.5px}
+.rd-fail:active{background:var(--porcelain)}
 .rd-msg{margin-top:11px;padding:11px 13px;border-radius:11px;font-size:14px;line-height:1.5}
 .rd-msg[hidden]{display:none}
 .rd-msg.ok{background:rgba(46,158,107,.12);color:#1d6c48}
@@ -345,6 +349,10 @@ input[type=file]{display:none}
             </button>
             <span class="rd-hint">Гость называет код вслух — этого достаточно</span>
           </div>
+          <!-- Деградированный режим. Отказ кода не должен решать, впускать ли
+               гостя: он уже пришёл, а не сработать может что угодно — сеть
+               в подвале, опечатка, наша собственная ошибка. -->
+          <button class="rd-fail" type="button" id="rdFail">Код не проходит — впустить гостя</button>
           <div class="rd-msg" id="rdMsg" hidden></div>
           <div class="rd-cam" id="rdCam" hidden>
             <video id="rdVideo" playsinline muted></video>
@@ -360,6 +368,7 @@ input[type=file]{display:none}
           <div class="sh-date" id="shDate">—</div>
         </div>
         <div class="sh-warn" id="shWarn" hidden></div>
+        <div class="sh-warn sh-manual" id="shManual" hidden></div>
 
         <div class="bk-tabs">
           <button class="bk-tab on" data-f="today">Сегодня</button>
@@ -891,6 +900,16 @@ async function refreshToday(){
   $("shWait").textContent=TODAY.waiting;
   $("shCame").textContent=TODAY.arrived;
   $("shDate").textContent=fmtBkDate(TODAY.date);
+  /* Случаи ручного разбора — рядом со сменой, иначе про них забудут. */
+  const man=$("shManual");
+  if(man){
+    if(TODAY.manual_open){
+      man.textContent = TODAY.manual_open === 1
+        ? "1 гость впущен без кода — разберите после смены"
+        : `${TODAY.manual_open} гостя впущены без кода — разберите после смены`;
+      man.hidden=false;
+    } else man.hidden=true;
+  }
   const warn=$("shWarn");
   if(TODAY.notifications_blocked){
     warn.textContent="Уведомления в Telegram не доходят: бот заблокирован. "
@@ -990,6 +1009,39 @@ async function redeemCode(raw){
 }
 
 $("rdForm").onsubmit=e=>{ e.preventDefault(); hap(); redeemCode($("rdCode").value); };
+
+/* Деградированный режим: гость стоит на входе, а код не проходит.
+
+   Кнопка ничего не проверяет и ни в чём не отказывает — она только
+   записывает случай и говорит сотруднику «сажайте». Любая проверка
+   здесь означала бы, что гостя снова можно не впустить из-за нашей
+   ошибки, а он уже пришёл и уже заплатил вниманием.
+
+   Если кабинет вообще не открылся, у сотрудника остаётся последнее
+   средство: код гость называет вслух, а разобраться можно и потом.
+   Поэтому отказ сети здесь тоже не блокирует посадку. */
+$("rdFail").onclick=async()=>{
+  hap();
+  const hint=prompt("Кого впускаем? Имя или что случилось — чтобы потом разобраться:", "");
+  if(hint===null) return;                 // передумал
+  const btn=$("rdFail");
+  btn.disabled=true; btn.textContent="Записываем…";
+  try{
+    const r=await api("/api/cab/bookings/manual", {method:"POST",
+      body:JSON.stringify({code:$("rdCode").value||"", guest_hint:hint||"",
+                           reason:"code_failed"})});
+    rdSay(r.message||"Гостя можно впустить. Случай записан.", true);
+    $("rdCode").value="";
+    refreshToday().catch(()=>{});
+  }catch(err){
+    /* Даже если запись не ушла — гостя всё равно впускаем. Сказать об этом
+       прямо важнее, чем показать честную ошибку и оставить человека у двери. */
+    rdSay("Записать не удалось, но гостя впустите. Сообщите управляющему: "
+          + ($("rdCode").value || hint || "код не назван"), false);
+  }finally{
+    btn.disabled=false; btn.textContent="Код не проходит — впустить гостя";
+  }
+};
 
 /* ---- сканер ---- */
 const hasTgScan = () => !!(tg && typeof tg.showScanQrPopup === "function");

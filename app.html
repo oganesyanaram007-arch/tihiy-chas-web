@@ -185,6 +185,7 @@ body{font-family:var(--sans);background:radial-gradient(1000px 620px at 72% -6%,
 .qr{display:block;width:142px;height:142px;margin:14px auto 6px;border-radius:14px;background:#fff;border:8px solid #fff;outline:1px solid var(--line-lt);object-fit:contain}
 .qr[hidden]{display:none}
 .bk-qr{margin:4px auto 12px}
+.offline-note{background:rgba(223,166,60,.16);border:1px solid rgba(223,166,60,.45);border-radius:12px;padding:11px 13px;margin-bottom:12px;font-size:12.5px;line-height:1.5;color:var(--ink)}
 .code{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--honey-d)}
 .ok-details{margin:14px 16px 0;text-align:left}
 .ghost-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 16px 0;background:var(--porcelain);border:1.5px solid var(--line-lt);border-radius:14px;padding:13px;font-size:13.5px;font-weight:700;color:var(--ink);width:calc(100% - 32px)}
@@ -896,7 +897,10 @@ function renderUp(){
   const up=MYBOOKINGS.filter(b=>b.upcoming);
   if(!LOADED){box.innerHTML=`<div class="empty">Загружаем ваши брони…</div>`;return;}
   if(!up.length){box.innerHTML=`<div class="empty">Пока нет активных броней — выберите тихое окно в ленте</div>`;return;}
-  box.innerHTML=up.map(bkLine).join("");
+  const note = FROM_CACHE
+    ? `<div class="offline-note">Нет связи с сервером — показываем сохранённое на телефоне.
+       Код брони действителен, называйте его на входе.</div>` : "";
+  box.innerHTML=note+up.map(bkLine).join("");
   /* QR по требованию: тянуть картинку для каждой брони сразу — лишний
      трафик на мобильной сети, а нужен он только у входа. */
   box.querySelectorAll("[data-qr]").forEach(a=>a.onclick=async e=>{
@@ -932,9 +936,41 @@ async function loadAvailability(){
   try{const d=await api("/availability?date="+isoDate(dayOff));AVAIL=d.left||{};}
   catch(e){AVAIL={};}
 }
+/* Брони — в памяти телефона.
+
+   Гость у входа называет код. Если в этот момент нет сети, экран обязан
+   всё равно показать заведение, время и код: человек уже пришёл.
+   Кэш живёт только в браузере гостя и умеет отсутствовать. */
+const BK_CACHE="tc_app_bookings_v1";
+let FROM_CACHE=false;
+
+function bkCacheSave(list){
+  try{
+    localStorage.setItem(BK_CACHE, JSON.stringify({
+      savedAt:Date.now(),
+      bookings:(list||[]).filter(b=>b.upcoming).map(b=>({
+        id:b.id, code:b.code, status:b.status, date:b.date, hour:b.hour,
+        when:b.when, discount:b.discount, upcoming:b.upcoming, venue:b.venue}))}));
+  }catch(e){}
+}
+function bkCacheLoad(){
+  try{
+    const d=JSON.parse(localStorage.getItem(BK_CACHE)||"null");
+    return (d && Array.isArray(d.bookings)) ? d.bookings : [];
+  }catch(e){ return []; }
+}
+
 async function loadBookings(){
-  try{const d=await api("/bookings");MYBOOKINGS=d.bookings||[];PTS=d.points;VIS=d.visits;refreshPts();}
-  catch(e){MYBOOKINGS=[];}
+  try{
+    const d=await api("/bookings");
+    MYBOOKINGS=d.bookings||[];PTS=d.points;VIS=d.visits;refreshPts();
+    FROM_CACHE=false;
+    bkCacheSave(MYBOOKINGS);
+  }catch(e){
+    /* Сеть подвела — показываем сохранённое, а не пустой экран. */
+    MYBOOKINGS=bkCacheLoad();
+    FROM_CACHE=MYBOOKINGS.length>0;
+  }
 }
 async function reload(){
   await loadAvailability();dayRow();distRow();feed();

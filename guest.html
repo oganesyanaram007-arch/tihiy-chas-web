@@ -43,6 +43,9 @@ body{font-family:var(--sans)}
 .bkc-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .bkc-hd b{font-family:var(--disp);font-size:16.5px}
 .bkc-m{font-size:12.5px;color:var(--ink-soft);margin-top:3px}
+.offline-note{background:rgba(223,166,60,.16);border:1px solid rgba(223,166,60,.45);
+  border-radius:12px;padding:11px 13px;margin-bottom:14px;font-size:13px;
+  line-height:1.5;color:var(--ink)}
 .bkc-hint{font-size:13px;color:var(--ink-soft);margin:10px 0 4px;line-height:1.5}
 .bkc-hint .qr-t{color:var(--ink);font-weight:600;white-space:nowrap}
 /* Настоящий QR приходит картинкой с сервера; кука сессии уходит с запросом
@@ -316,18 +319,68 @@ $("gExit").onclick=async()=>{
   try{ await api("/api/auth/logout",{method:"POST"}); }catch(e){}
   location.href="/";
 };
+/* Последняя загрузка — в памяти телефона.
+
+   Гость стоит у входа и называет код. Если в этот момент нет сети или
+   лежит наш сервер, экран обязан всё равно показать заведение, время
+   и код: без них человек, который уже пришёл, остаётся ни с чем.
+
+   Храним только то, что нужно у двери. Кэш живёт в браузере гостя,
+   к нам не уходит и умеет отсутствовать — приватное окно, очищенные
+   данные, отключённое хранилище. Поэтому все обращения обёрнуты. */
+const CACHE_KEY="tc_bookings_v1";
+
+function cacheSave(data){
+  try{
+    const slim={
+      name:data.name, points:data.points, visits:data.visits,
+      savedAt:Date.now(),
+      bookings:(data.bookings||[]).filter(b=>b.upcoming).map(b=>({
+        id:b.id, code:b.code, status:b.status, date:b.date, hour:b.hour,
+        when:b.when, discount:b.discount, upcoming:b.upcoming, venue:b.venue}))
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(slim));
+  }catch(e){ /* приватное окно или запрет хранилища — не беда */ }
+}
+
+function cacheLoad(){
+  try{
+    const raw=localStorage.getItem(CACHE_KEY);
+    if(!raw) return null;
+    const d=JSON.parse(raw);
+    return (d && Array.isArray(d.bookings)) ? d : null;
+  }catch(e){ return null; }
+}
+
 async function load(){
   const [bk,me]=await Promise.all([api("/api/guest/bookings"),api("/api/auth/me")]);
   DATA={...bk, email:me.user.email, phone:me.user.phone};
+  cacheSave(DATA);
   render(); show(tab);
 }
+
 (async()=>{
   try{
     await load();
     $("loading").style.display="none"; $("body").style.display="block";
   }catch(e){
     if(e.status===401){ location.href="/login.html"; return; }
-    $("loading").textContent="Не удалось загрузить кабинет. Обновите страницу.";
+    /* Сеть или сервер подвели. Показываем последнее, что знаем, и честно
+       говорим, что это из памяти телефона: код на входе всё равно рабочий. */
+    const cached=cacheLoad();
+    if(!cached){
+      $("loading").textContent="Не удалось загрузить кабинет. Обновите страницу.";
+      return;
+    }
+    DATA={...cached, email:"", phone:"", deposit:P.deposit};
+    render(); show(tab);
+    const warn=document.createElement("div");
+    warn.className="offline-note";
+    warn.textContent="Нет связи с сервером — показываем последнее, что сохранено "
+                   + "на этом телефоне. Код брони действителен, называйте его на входе.";
+    const host=$("scrUp");
+    if(host) host.prepend(warn);
+    $("loading").style.display="none"; $("body").style.display="block";
   }
 })();
 </script>
