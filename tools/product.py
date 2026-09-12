@@ -26,6 +26,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 import re
@@ -43,6 +44,7 @@ PAGES = ["index.html", "app.html", "guest.html", "login.html",
 BOT_APP = ROOT.parent / "tihiy-chas-bot" / "app"
 
 MARKER = re.compile(r"(<!--p:([A-Za-z0-9_.]+)-->)(.*?)(<!--/p-->)", re.S)
+SCRIPT = re.compile(r'(<script src="/content/product\.js)(\?v=[0-9a-f]+)?(")')
 
 
 # ---------------------------------------------------------------------
@@ -151,6 +153,8 @@ def js(p: dict) -> str:
         "cancelFreeHours": p["booking"]["cancelFreeHours"],
         "noShowPolicy": p["booking"]["noShowPolicy"],
         "redeemPrimary": p["redeem"]["primary"],
+        "points": {k: v for k, v in p["points"].items()
+                   if not k.startswith("_")},
         "codeLength": p["code"]["length"],
         "codeAlphabet": p["code"]["alphabet"],
         "districts": p["geo"]["districts"],
@@ -186,6 +190,10 @@ def py(p: dict) -> str:
         f'NO_SHOW_POLICY = {p["booking"]["noShowPolicy"]!r}',
         f'REDEEM_PRIMARY = {p["redeem"]["primary"]!r}       # код — основное, QR — ускоритель',
         f'CODE_LENGTH = {p["code"]["length"]}',
+        f'POINTS_PER_BOOKING = {p["points"]["perBooking"]}',
+        f'POINTS_PER_VISIT = {p["points"]["perVisit"]}',
+        f'POINTS_NEW_VENUE_MULT = {p["points"]["newVenueMultiplier"]}',
+        f'POINTS_REFERRAL = {p["points"]["referral"]}',
         f'CODE_ALPHABET = {p["code"]["alphabet"]!r}',
         f'CODE_LEGACY_PREFIX = {p["code"]["legacyPrefix"]!r}',
         f'DISTRICTS = {p["geo"]["districts"]}',
@@ -198,6 +206,16 @@ def py(p: dict) -> str:
         lines.append(f"    {k!r}: {c[k]!r},")
     lines += ["}", ""]
     return "\n".join(lines)
+
+
+def stamp_version(text: str, version: str) -> str:
+    """Дописывает метку версии к ссылке на product.js.
+
+    На статику nginx ставит кэш в тридцать дней, а имя файла не меняется.
+    Без метки правка цены доехала бы до гостя через месяц — а до тех, кто
+    уже открывал сайт, не доехала бы вовсе.
+    """
+    return SCRIPT.sub(lambda m: f"{m.group(1)}?v={version}{m.group(3)}", text)
 
 
 def substitute(text: str, rmap: dict, where: str, problems: list) -> str:
@@ -219,17 +237,20 @@ def main() -> int:
 
     targets: list[tuple[pathlib.Path, str]] = []
 
+    js_body = js(p)
+    version = hashlib.sha256(js_body.encode("utf-8")).hexdigest()[:8]
+
     for name in PAGES:
         path = ROOT / name
         if not path.exists():
             continue
         before = path.read_text(encoding="utf-8")
-        after = substitute(before, rmap, name, problems)
+        after = stamp_version(substitute(before, rmap, name, problems), version)
         targets.append((path, after))
         if before != after:
             stale.append(name)
 
-    targets.append((ROOT / "content" / "product.js", js(p)))
+    targets.append((ROOT / "content" / "product.js", js_body))
     if BOT_APP.is_dir():
         targets.append((BOT_APP / "product.py", py(p)))
 

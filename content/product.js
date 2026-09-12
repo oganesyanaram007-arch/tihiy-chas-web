@@ -11,6 +11,12 @@ window.PRODUCT = {
   "cancelFreeHours": 3,
   "noShowPolicy": "none",
   "redeemPrimary": "code",
+  "points": {
+    "perBooking": 20,
+    "perVisit": 30,
+    "newVenueMultiplier": 2,
+    "referral": 200
+  },
   "codeLength": 6,
   "codeAlphabet": "23456789ABCDEFGHJKMNPQRSTVWXYZ",
   "districts": 14,

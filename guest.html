@@ -151,7 +151,7 @@ body{font-family:var(--sans)}
   </div>
 </div></div></div>
 <div class="toast" id="toast"></div>
-<script src="/content/product.js"></script>
+<script src="/content/product.js?v=559e8c01"></script>
 <script>
 const P=window.PRODUCT;   /* content/product.json */
 const $=id=>document.getElementById(id);
@@ -265,7 +265,7 @@ function renderLoyalty(){
         <span class="r">+${L.pts_visit} баллов</span></div>
       <div class="bn-row"><span class="l">
         <svg class="ic" viewBox="0 0 24 24"><use href="#ic-list"/></svg>За бронь</span>
-        <span class="r">+20 баллов</span></div>
+        <span class="r">+${P.points.perBooking} баллов</span></div>
       ${P.depositCharged ? `<div class="bn-row"><span class="l">
         <svg class="ic" viewBox="0 0 24 24"><use href="#ic-store"/></svg>${L.deposit} баллов</span>
         <span class="r">депозит в подарок</span></div>` : ""}
