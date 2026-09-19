@@ -37,7 +37,7 @@ SOURCE = ROOT / "content" / "product.json"
 
 # Страницы, в которых работают маркеры <!--p:…-->
 PAGES = ["index.html", "app.html", "guest.html", "login.html",
-         "tihiy-chas-cabinet.html", "404.html"]
+         "partner.html", "tihiy-chas-cabinet.html", "404.html"]
 
 # Бэкенд лежит в отдельном репозитории рядом. Если его нет (например, на
 # машине, где клонирован только сайт) — молча пропускаем, сайт самодостаточен.
@@ -94,6 +94,8 @@ def values(p: dict) -> dict:
         "planStandard": rub(prices["standard"]["price"]),
         "planStandardName": prices["standard"]["name"],
         "foodCostPct": str(p["calc"]["foodCostPct"]),
+        "pointsVisit": str(p["points"]["perVisit"]),
+        "pointsBooking": str(p["points"]["perBooking"]),
         "bot": p["support"]["telegramBot"],
     }
 
@@ -123,6 +125,10 @@ def render_map(p: dict) -> dict:
     out = {f"copy.{k}": s for k, s in copy(p).items()}
     for k, s in values(p).items():
         out[k] = s
+    # Фирменный знак: одна геометрия на все страницы, иначе стрелки
+    # на часах снова разъедутся — так уже было между шапкой и фавиконом.
+    out["brand.mark"] = (f'<circle cx="12" cy="12" r="9"/>'
+                         f'<path d="{p["brand"]["markHands"]}"/>')
     out["code.example"] = "".join(p["code"]["alphabet"][i % len(p["code"]["alphabet"])]
                                   for i in (7, 19, 2, 25, 11, 4))
     for it in p["plans"]["items"]:

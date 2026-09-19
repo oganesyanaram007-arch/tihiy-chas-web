@@ -1,0 +1,140 @@
+/* Общий вид входа для гостя и для заведения.
+
+   Страницы две и намеренно разные по смыслу, но одна по устройству:
+   раньше был один экран с переключателем роли, и по нему нельзя было
+   понять, кабинет это для ресторана или для гостя. Различает их теперь
+   не тумблер, а сама страница — заголовок, список того, что внутри,
+   и цвет акцента. Стили при этом общие, чтобы они не разъехались. */
+
+:root{
+  --ink:#1E1813;
+  --muted:#6E6456;
+  --faint:#9A8F7E;
+  --paper:#FDFAF5;
+  --card:#FFFFFF;
+  --line:#E7DDCE;
+  --line-soft:#F0E9DC;
+  --honey:#B07A16;
+  --honey-bg:rgba(176,122,22,.09);
+  --err:#A8412B;
+  --ok:#2E6F52;
+
+  --display:"PT Serif",Georgia,"Times New Roman",serif;
+  --body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+
+/* Кабинет заведения отличается по тону: тёплый янтарь у гостя,
+   спокойный сине-серый у партнёра — чтобы сотрудник на смене
+   не перепутал свой экран с гостевым. */
+body[data-audience="partner"]{
+  --honey:#3C5375;
+  --honey-bg:rgba(60,83,117,.09);
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#F0E9DD; --muted:#A99E8B; --faint:#7C7364;
+    --paper:#16120E; --card:#1D1813;
+    --line:#332A21; --line-soft:#261F19;
+    --honey:#DCA63F; --honey-bg:rgba(220,166,63,.12);
+    --err:#E0785D; --ok:#6FBF95;
+  }
+  body[data-audience="partner"]{
+    --honey:#8FB0DE; --honey-bg:rgba(143,176,222,.12);
+  }
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:var(--body);background:var(--paper);color:var(--ink);
+  min-height:100vh;padding:24px 20px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  /* Колонкой, а не строкой: ссылка «назад» — сосед карточки, и в строке
+     она вставала сбоку от неё вместо того, чтобы лечь под низ. */
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+
+.card{
+  width:100%;max-width:412px;background:var(--card);border:1px solid var(--line);
+  border-radius:20px;padding:30px 26px 26px;
+  box-shadow:0 10px 34px rgba(30,20,10,.055);
+}
+
+/* ── шапка: знак, кому экран, что внутри ── */
+.brand{
+  display:flex;align-items:center;gap:9px;margin-bottom:22px;
+  font-family:var(--display);font-weight:700;font-size:17px;
+  color:var(--ink);text-decoration:none;
+}
+.brand svg{width:22px;height:22px;flex:none;color:var(--honey);
+  fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+
+.who{
+  display:inline-block;font-size:11px;font-weight:700;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--honey);background:var(--honey-bg);
+  padding:4px 10px;border-radius:4px;margin-bottom:12px;
+}
+h1{font-family:var(--display);font-size:25px;font-weight:700;line-height:1.2;
+  margin:0 0 6px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14.5px;margin:0 0 20px}
+
+/* ── что внутри: главный ответ на «для кого этот кабинет» ── */
+.inside{list-style:none;margin:0 0 22px;padding:16px 0 0;border-top:1px solid var(--line-soft)}
+.inside li{
+  position:relative;padding:0 0 9px 24px;font-size:14px;color:var(--muted);
+}
+.inside li:last-child{padding-bottom:0}
+.inside li::before{
+  content:"";position:absolute;left:5px;top:9px;width:5px;height:5px;
+  border-radius:50%;background:var(--honey);
+}
+
+/* ── вкладки вход/регистрация ── */
+.tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--honey-bg);
+  border-radius:12px;padding:4px}
+.tab{
+  flex:1;text-align:center;padding:9px;border-radius:9px;font-size:14px;
+  font-weight:600;min-height:44px;display:grid;place-items:center;
+  cursor:pointer;color:var(--muted);user-select:none;border:0;background:none;
+  font-family:inherit;
+}
+.tab.active{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.07)}
+
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+input[type=email],input[type=password],input[type=text],input[type=tel]{
+  width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:11px;
+  font-size:16px;background:var(--card);color:var(--ink);font-family:inherit;
+  min-height:46px;
+}
+input:focus{outline:none;border-color:var(--honey)}
+
+.consent{display:flex;gap:9px;align-items:flex-start;margin-top:16px;
+  font-size:12.5px;color:var(--muted);line-height:1.5}
+.consent input{margin-top:3px;flex:none;width:17px;height:17px;accent-color:var(--honey)}
+.consent a{color:var(--ink)}
+
+button.submit{
+  width:100%;margin-top:20px;padding:13px;border:0;border-radius:12px;
+  background:var(--honey);color:#fff;font-size:15.5px;font-weight:700;
+  cursor:pointer;min-height:48px;font-family:inherit;
+}
+button.submit:disabled{opacity:.55;cursor:default}
+
+.msg{font-size:13.5px;margin-top:12px;min-height:1px;line-height:1.5}
+.msg.err{color:var(--err)}
+.msg.ok{color:var(--ok)}
+
+/* ── переход на соседний кабинет ── */
+.other{
+  margin:22px -26px -26px;padding:16px 26px;border-top:1px solid var(--line-soft);
+  background:var(--honey-bg);border-radius:0 0 19px 19px;
+  font-size:13.5px;color:var(--muted);
+}
+.other a{color:var(--ink);font-weight:600;text-decoration:none;border-bottom:1px solid var(--honey)}
+
+.field{display:none}
+.field.show{display:block}
+
+.back{display:block;text-align:center;margin-top:18px;font-size:13px;
+  color:var(--faint);text-decoration:none}

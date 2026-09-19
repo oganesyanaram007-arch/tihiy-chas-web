@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Кабинет гостя — Тихий Час</title>
+<title>Кабинет заведения — Тихий Час</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/content/auth.css">
 </head>
-<body data-audience="guest">
+<body data-audience="partner">
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
  <g id="i-mark"><!--p:brand.mark--><circle cx="12" cy="12" r="9"/><path d="M12 12V6.5M12 12H16.5"/><!--/p--></g>
@@ -21,19 +21,19 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mark"/></svg>Тихий&nbsp;Час
   </a>
 
-  <span class="who">Для гостей</span>
-  <h1 id="title">Кабинет гостя</h1>
-  <p class="sub">Здесь ваши брони и коды, которые вы называете на входе.</p>
+  <span class="who">Для заведений</span>
+  <h1 id="title">Кабинет заведения</h1>
+  <p class="sub">Рабочий экран смены: кто придёт сегодня и как отметить гостя на входе.</p>
 
   <ul class="inside">
-    <li>Брони и код на вход — код называете администратору, он отмечает визит</li>
-    <li>Отмена брони в один тап, бесплатно за <!--p:cancelHours-->3 часа<!--/p--> до визита</li>
-    <li>Тихие баллы за визиты: <!--p:pointsVisit-->30<!--/p--> за визит, вдвое больше за новое заведение</li>
+    <li>Брони на сегодня с кодами и временем — на телефоне хостес</li>
+    <li>Гость называет код, сотрудник вводит его и отмечает визит. QR ускоряет</li>
+    <li>Тихие окна, глубина скидки и лимит мест — задаёте сами</li>
   </ul>
 
   <div class="tabs">
     <button class="tab active" type="button" data-mode="login">Вход</button>
-    <button class="tab" type="button" data-mode="register">Регистрация</button>
+    <button class="tab" type="button" data-mode="register">Подключить</button>
   </div>
 
   <form id="form" novalidate>
@@ -42,11 +42,11 @@
       <input type="email" id="email" required autocomplete="email">
     </div>
     <div class="field" id="nameField">
-      <label for="name">Имя</label>
-      <input type="text" id="name" autocomplete="name">
+      <label for="name">Название заведения</label>
+      <input type="text" id="name" autocomplete="organization">
     </div>
     <div class="field" id="phoneField">
-      <label for="phone">Телефон (можно указать позже)</label>
+      <label for="phone">Телефон для связи</label>
       <input type="tel" id="phone" autocomplete="tel">
     </div>
     <div>
@@ -57,25 +57,20 @@
       <input type="checkbox" id="consent">
       <span>Принимаю <a href="/privacy.html" target="_blank" rel="noopener">политику конфиденциальности</a> и условия оферты</span>
     </div>
+    <p class="field" id="orgHint" style="margin:14px 0 0;font-size:12.5px;color:var(--muted)">
+      Аккаунт создаётся сразу. Заведение появится в ленте после проверки —
+      обычно в течение суток.</p>
     <button class="submit" id="submit" type="submit">Войти</button>
     <div class="msg" id="msg"></div>
   </form>
 
   <div class="other">
-    У вас заведение? <a href="/partner.html">Вход в кабинет заведения</a>
+    Хотите бронировать, а не принимать гостей? <a href="/login.html">Вход в кабинет гостя</a>
   </div>
 </div>
 
-<a class="back" href="/">← Смотреть тихие часы</a>
+<a class="back" href="/#biz">← Условия для заведений</a>
 
-<script>
-/* Прежний адрес входа для заведений — /login.html?role=partner. Он мог
-   остаться в закладках и письмах, поэтому уводим на свою страницу,
-   а не показываем гостевой экран человеку, который шёл в кабинет. */
-if (new URLSearchParams(location.search).get("role") === "partner") {
-  location.replace("/partner.html" + location.hash);
-}
-</script>
 <script src="/content/auth.js"></script>
 </body>
 </html>
