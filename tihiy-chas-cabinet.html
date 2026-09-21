@@ -606,7 +606,9 @@ async function api(path, opts={}){
     headers:{"Content-Type":"application/json","X-Init-Data":initData, ...(opts.headers||{})}
   });
   const data = await r.json().catch(()=>({}));
-  if(r.status===401){ location.href="/login.html"; throw new Error("Сессия истекла"); }
+  /* Вход для заведений, а не гостевой: у хостес истекла смена, и гостевой
+     экран ей ничего не объясняет. */
+  if(r.status===401){ location.href="/partner.html"; throw new Error("Сессия истекла"); }
   if(r.status===413) throw new Error("Фото слишком большое, выберите другое");
   if(!r.ok) throw new Error(data.detail || `Ошибка сервера (${r.status})`);
   return data;
@@ -696,8 +698,18 @@ async function boot(){
       PROF={user:m.user||{}, partner:m.partner||{}};   // экран профиля откроется без пустой паузы
       applyMe(PROF);
     }catch(e){}
+    /* Сначала рисуем список — он уже загружен, и экран не должен ждать сети.
+       Когда приедут сегодняшние брони, уводим на смену: у входа сотруднику
+       нужна именно она, а не список заведений. Это принцип продукта —
+       источник правды для персонала это «брони на сегодня».
+       Если человек за это время сам куда-то ушёл, не перебиваем его. */
     go("list");
-    refreshBookings().catch(()=>{});
+    refreshBookings().then(()=>{
+      if(screen !== "list") return;
+      const isStaff = PROF && PROF.user && PROF.user.role === "staff";
+      const busy = TODAY && (TODAY.waiting || TODAY.arrived || TODAY.manual_open);
+      if(isStaff || busy) go("bookings");
+    }).catch(()=>{});
   }catch(e){
     const msg = keyError || (e && e.message) || "";
     if(inRealTelegram){
@@ -706,7 +718,7 @@ async function boot(){
         : "Откройте кабинет через бота @Tihiy_chas_yourbot — команда /cabinet.";
     } else {
       $("gateStatus").innerHTML = (/[а-яА-Я]/.test(msg) ? msg + ". " : "Сессия не найдена. ")
-        + '<a href="/login.html" style="color:var(--honey-d);font-weight:600">Войти на сайте</a>';
+        + '<a href="/partner.html" style="color:var(--honey-d);font-weight:600">Войти на сайте</a>';
     }
   }
 }
